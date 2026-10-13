@@ -18,7 +18,8 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # trusted publishing needs npm 11.5.1 or newer, which Node 24 ships with
+          node-version: 24
           registry-url: https://registry.npmjs.org/
           cache: 'npm'
 
@@ -46,7 +47,7 @@ jobs:
             echo "value=latest" >> "$GITHUB_OUTPUT"
           fi
 
+      # no token: npm trades the job's OIDC identity for a short-lived one, through the trusted publisher
+      # configured for this workflow on npmjs.com, and attaches provenance by itself
       - name: Publish package to NPM
-        run: npm publish --access public --provenance --tag ${{ steps.dist_tag.outputs.value }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --tag ${{ steps.dist_tag.outputs.value }}
