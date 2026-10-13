@@ -1,0 +1,51 @@
+import { DiscordReply } from '../discordComponents';
+import { type Message, MessageReferenceType, UserFlags } from 'discord.js';
+import type { RenderMessageContext } from '..';
+import React from 'react';
+import { roleColor } from '../../utils/buildProfiles';
+import MessageContent, { RenderType } from './content';
+
+export default async function MessageReply({ message, context }: { message: Message; context: RenderMessageContext }) {
+  if (!message.reference) return null;
+  // a forward also carries a reference, but it is rendered from its snapshot
+  if (message.reference.type === MessageReferenceType.Forward) return null;
+  if (message.reference.guildId !== message.guild?.id) return null;
+
+  const referencedMessage = context.messages.find((m) => m.id === message.reference!.messageId);
+
+  if (!referencedMessage) return <DiscordReply slot="reply">Message could not be loaded.</DiscordReply>;
+
+  const isCrossPost = referencedMessage.reference && referencedMessage.reference.guildId !== message.guild?.id;
+  const isCommand = referencedMessage.interaction !== null;
+  const isOp = message.channel?.isThread() && referencedMessage.author.id === message.channel.ownerId;
+
+  return (
+    <DiscordReply
+      slot="reply"
+      edited={!isCommand && referencedMessage.editedAt !== null}
+      attachment={referencedMessage.attachments.size > 0}
+      author={
+        referencedMessage.member?.nickname ?? referencedMessage.author.displayName ?? referencedMessage.author.username
+      }
+      avatar={referencedMessage.author.avatarURL({ size: 32 }) ?? undefined}
+      roleColor={roleColor(referencedMessage.member)}
+      bot={!isCrossPost && referencedMessage.author.bot}
+      verified={referencedMessage.author.flags?.has(UserFlags.VerifiedBot)}
+      op={isOp}
+      server={isCrossPost ?? undefined}
+      command={isCommand}
+    >
+      {referencedMessage.content ? (
+        <span data-goto={referencedMessage.id}>
+          <MessageContent content={referencedMessage.content} context={{ ...context, type: RenderType.REPLY }} />
+        </span>
+      ) : isCommand ? (
+        <em data-goto={referencedMessage.id}>Click to see command.</em>
+      ) : referencedMessage.stickers?.size > 0 && referencedMessage.attachments.size === 0 ? (
+        <em data-goto={referencedMessage.id}>Click to see sticker.</em>
+      ) : (
+        <em data-goto={referencedMessage.id}>Click to see attachment.</em>
+      )}
+    </DiscordReply>
+  );
+}

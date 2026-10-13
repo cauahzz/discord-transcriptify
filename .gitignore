@@ -1,0 +1,28 @@
+# dependencies and build output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# output of `npm pack`
+*.tgz
+
+# secrets for the tests that talk to Discord
+.env
+.env.*
+
+# logs and caches
+*.log
+.eslintcache
+coverage/
+
+# operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# local tooling
+.agents/
+.claude/
+.superpowers/
+.playwright-mcp/
+skills-lock.json

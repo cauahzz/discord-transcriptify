@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "types": ["@types/node", "react/experimental", "@types/react-dom"],
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "module": "node16",
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": true,
+    "outDir": "dist",
+    "rootDir": "./src",
+    "sourceMap": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "exactOptionalPropertyTypes": false,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedParameters": true,
+    "pretty": true,
+    "moduleResolution": "node16",
+    "jsx": "react",
+    "incremental": true,
+    // Keep the build cache inside the output dir so that removing `dist`
+    // genuinely forces a full rebuild instead of a stale no-op.
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "declaration": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}
