@@ -1,0 +1,16 @@
+name: Feature request
+description: Something Discord shows that the transcript does not, or an option you need.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What you would like
+      description: If it is something Discord renders, a screenshot from the client shows exactly what to match.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why you need it
+      description: The use case, for example ticket logs, moderation records or channel archives.

@@ -1,0 +1,46 @@
+name: Bug report
+description: Something renders wrong, or generating a transcript fails.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What the transcript shows, and what the Discord client shows for the same message. Screenshots of both help a lot.
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: How you call it
+      description: The call and the options you pass. Leave out tokens and IDs you do not want public.
+      render: js
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Error output
+      description: The full error and stack trace, if there is one.
+      render: shell
+  - type: input
+    id: version
+    attributes:
+      label: discord-transcriptify version
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: discordjs
+    attributes:
+      label: discord.js version
+      placeholder: 14.22.1
+    validations:
+      required: true
+  - type: input
+    id: node
+    attributes:
+      label: Node version
+      placeholder: 22.11.0
+    validations:
+      required: true
