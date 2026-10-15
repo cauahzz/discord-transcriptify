@@ -5,5 +5,5 @@
     "skipLibCheck": true,
     "rootDir": "."
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests", "demo"]
 }

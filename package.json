@@ -18,6 +18,7 @@
     "prepack": "npm run build",
     "test:typescript": "ts-node ./tests/generate.ts",
     "test:send-components-v2": "ts-node ./tests/components-v2-send.ts",
+    "demo": "ts-node ./demo/generate.ts",
     "lint": "prettier --write --cache . && eslint --cache --fix .",
     "lint:check": "prettier --check . && eslint .",
     "typecheck": "tsc -p tsconfig.eslint.json"
