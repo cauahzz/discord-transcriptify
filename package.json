@@ -28,16 +28,31 @@
     "url": "git+https://github.com/cauahzz/discord-transcriptify.git"
   },
   "keywords": [
+    "discord",
     "discord.js",
-    "discord.js-transcripts",
-    "discord.js-html-transcripts",
+    "discordjs",
+    "transcript",
+    "discord-transcript",
+    "discord-transcripts",
+    "html-transcript",
     "html-transcripts",
     "discord-html-transcripts",
-    "discord-transcripts",
-    "discord-transcriptify",
-    "components-v2"
+    "discord.js-transcripts",
+    "discord.js-html-transcripts",
+    "ticket-transcript",
+    "discord-ticket",
+    "chat-exporter",
+    "discord-chat-exporter",
+    "components-v2",
+    "discord-polls",
+    "voice-messages",
+    "discord-bot",
+    "discord-transcriptify"
   ],
-  "author": "cauahzz",
+  "author": {
+    "name": "cauahzz",
+    "url": "https://github.com/cauahzz"
+  },
   "license": "Apache-2.0",
   "engines": {
     "node": ">=18.17"
