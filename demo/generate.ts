@@ -96,7 +96,7 @@ const guild = (client.guilds as any)._add({
   owner_id: sam.id,
   roles: [
     role(GUILD_ID, '@everyone', 0, 0),
-    role('1290000000000000021', 'Support', 0x2ecc71, 2),
+    { ...role('1290000000000000021', 'Support', 0x2ecc71, 2), unicode_emoji: '🛠️' },
     role('1290000000000000022', 'Manager', 0xe67e22, 3),
     role('1290000000000000023', 'Customer', 0x3498db, 1),
   ],

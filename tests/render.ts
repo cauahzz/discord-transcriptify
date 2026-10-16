@@ -2479,6 +2479,27 @@ async function main() {
     false
   );
 
+  const iconRole = (id: string, extra: Record<string, unknown>) =>
+    (guild.roles as any)._add({ ...coloured.toJSON(), id, name: `icon-${id}`, position: 2, ...extra });
+  iconRole('555000000000000052', { icon: 'abcdef0123456789' });
+  iconRole('555000000000000053', { unicode_emoji: '⭐' });
+  memberOf('63', ['555000000000000052']);
+  memberOf('64', ['555000000000000053']);
+  const iconHtml = await render([
+    message({ content: 'a', author: authorOf('63') }),
+    message({ content: 'b', author: authorOf('64') }),
+  ]);
+  const imageIcon = profileOf(iconHtml, '63') as { roleIcon?: string; roleName?: string };
+  const emojiIcon = profileOf(iconHtml, '64') as { roleIcon?: string; roleName?: string };
+  check(
+    'an uploaded role icon is in the profile',
+    imageIcon.roleIcon?.includes('/role-icons/555000000000000052/'),
+    true
+  );
+  check('with the name of the role it belongs to', imageIcon.roleName, 'icon-555000000000000052');
+  check('a unicode emoji role icon becomes its twemoji', emojiIcon.roleIcon?.endsWith('/2b50.svg'), true);
+  check('no icon, no role name', 'roleName' in (profileOf(colouredHtml, '61') as object), false);
+
   const memberRequests: string[][] = [];
   const originalFetch = guild.members.fetch.bind(guild.members);
   let failRequests = false;

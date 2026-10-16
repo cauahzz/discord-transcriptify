@@ -1,4 +1,5 @@
 import { type GuildMember, type Message, type User, UserFlags } from 'discord.js';
+import { parseDiscordEmoji } from './utils';
 
 export type Profile = {
   author: string; // author of the message
@@ -67,6 +68,14 @@ export function roleColor(member: GuildMember | null | undefined): string | unde
   return member && member.displayHexColor !== '#000000' ? member.displayHexColor : undefined;
 }
 
+/** The icon of a member's highest role that has one, either an uploaded image or a unicode emoji. */
+function roleIcon(member: GuildMember | null) {
+  const role = member?.roles.icon;
+  if (!role) return {};
+  const icon = role.iconURL() ?? (role.unicodeEmoji ? parseDiscordEmoji({ name: role.unicodeEmoji }) : null);
+  return icon ? { roleIcon: icon, roleName: role.name } : {};
+}
+
 /** The name a message author is shown with; the profiles and the message attributes must agree on it. */
 export function displayName(member: GuildMember | null, author: User) {
   return member?.nickname ?? author.displayName ?? author.username;
@@ -99,8 +108,7 @@ function buildProfile(member: GuildMember | null, author: User, options: Profile
     author: displayName(member, author),
     avatar: member?.displayAvatarURL({ size: 64 }) ?? author.displayAvatarURL({ size: 64 }),
     roleColor: roleColor(member),
-    roleIcon: member?.roles.icon?.iconURL() ?? undefined,
-    roleName: member?.roles.hoist?.name ?? undefined,
+    ...roleIcon(member),
     bot: author.bot,
     verified: author.flags?.has(UserFlags.VerifiedBot),
     ...(options.serverTags ? buildServerTag(author) : {}),
