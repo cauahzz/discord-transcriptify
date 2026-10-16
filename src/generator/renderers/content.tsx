@@ -18,6 +18,7 @@ import { ASTNode as MessageASTNodes } from 'simple-markdown';
 import type { SingleASTNode } from 'simple-markdown';
 import type { RenderMessageContext } from '../';
 import { parseDiscordEmoji } from '../../utils/utils';
+import AnsiCodeBlock from './components/AnsiCodeBlock';
 
 export enum RenderType {
   EMBED,
@@ -159,6 +160,7 @@ export async function MessageSingleASTNode({ node, context }: { node: SingleASTN
 
     case 'codeBlock':
       if (context.type !== RenderType.REPLY) {
+        if (node.lang?.toLowerCase() === 'ansi') return <AnsiCodeBlock code={node.content} />;
         return <DiscordCodeBlock language={node.lang} code={node.content} />;
       }
       return <DiscordInlineCode>{node.content}</DiscordInlineCode>;

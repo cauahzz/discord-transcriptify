@@ -1171,6 +1171,30 @@ export const globalStyles = `
     font-family: inherit;
   }
 
+  /* outranks the generic message pre rule, so the block matches the highlighted ones */
+  discord-messages pre.discord-ansi.discord-code-block-pre {
+    border-color: var(--dt-border);
+  }
+  /* Discord's own ANSI palette */
+  .discord-ansi .ansi-30 { color: #4f545c; }
+  .discord-ansi .ansi-31 { color: #dc322f; }
+  .discord-ansi .ansi-32 { color: #859900; }
+  .discord-ansi .ansi-33 { color: #b58900; }
+  .discord-ansi .ansi-34 { color: #268bd2; }
+  .discord-ansi .ansi-35 { color: #d33682; }
+  .discord-ansi .ansi-36 { color: #2aa198; }
+  .discord-ansi .ansi-37 { color: #ffffff; }
+  .discord-ansi .ansi-40 { background-color: #002b36; }
+  .discord-ansi .ansi-41 { background-color: #cb4b16; }
+  .discord-ansi .ansi-42 { background-color: #586e75; }
+  .discord-ansi .ansi-43 { background-color: #657b83; }
+  .discord-ansi .ansi-44 { background-color: #839496; }
+  .discord-ansi .ansi-45 { background-color: #6c71c4; }
+  .discord-ansi .ansi-46 { background-color: #93a1a1; }
+  .discord-ansi .ansi-47 { background-color: #fdf6e3; }
+  .discord-ansi .ansi-bold { font-weight: 700; }
+  .discord-ansi .ansi-underline { text-decoration: underline; }
+
   .discord-code-block-pre .hljs-comment {
     color: #999aa1;
   }

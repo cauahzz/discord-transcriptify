@@ -174,6 +174,18 @@ async function main() {
   check('content rendered', plain.includes('world'), true);
   check('not marked as forwarded', plain.includes('class="discord-forwarded"'), false);
 
+  console.log('\n== ansi code block ==');
+  const ansi = await render([
+    message({ content: '```ansi\n\u001b[1;31mError\u001b[0m plain \u001b[4;32;40mok\u001b[0m\n```' }),
+  ]);
+  check('rendered as an ansi block', ansi.includes('class="discord-code-block-pre discord-ansi"'), true);
+  check('bold and colour combine', ansi.includes('<span class="ansi-31 ansi-bold">Error</span>'), true);
+  check('reset drops the style', ansi.includes('</span> plain <span'), true);
+  check('background and underline', ansi.includes('<span class="ansi-32 ansi-40 ansi-underline">ok</span>'), true);
+  check('no escape characters left', ansi.includes('\u001b'), false);
+  const plainCode = await render([message({ content: '```js\nconst a = 1;\n```' })]);
+  check('other languages keep the regular block', plainCode.includes('<discord-code-block language="js"'), true);
+
   console.log('\n== join message ==');
   const joinText = async (timestamp: number) => {
     const html = await render([message({ id: SnowflakeUtil.generate({ timestamp }).toString(), type: 7 })]);

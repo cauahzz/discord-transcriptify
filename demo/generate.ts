@@ -272,6 +272,12 @@ conversation.push(
   })
 );
 conversation.push(
+  add(bot, 0, {
+    content:
+      '```ansi\n\u001b[1;32m✔\u001b[0m Replacement order \u001b[1m#4822\u001b[0m created\n\u001b[1;33m!\u001b[0m Old order \u001b[4m#4821\u001b[0m marked as \u001b[31mdamaged\u001b[0m\n\u001b[1;34mi\u001b[0m Customer notified by e-mail\n```',
+  })
+);
+conversation.push(
   add(sam, 1, {
     message_reference: {
       type: 1,
