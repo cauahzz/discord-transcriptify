@@ -480,7 +480,8 @@ export const enablePinnedMessages = `
 
     const now = new Date();
     const sameYear = date.getFullYear() === now.getFullYear();
-    return date.toLocaleDateString('en-US', sameYear
+    // the reader's locale, like the message timestamps the components render
+    return date.toLocaleDateString(undefined, sameYear
       ? { month: 'short', day: 'numeric' }
       : { month: 'short', day: 'numeric', year: 'numeric' });
   };
@@ -514,7 +515,8 @@ export const enablePinnedMessages = `
       .map((message, index) => {
         const profile = t.profile(message);
         const authorStyle = profile.roleColor ? ' style="color:' + t.escapeHtml(profile.roleColor) + '"' : '';
-        const timestamp = formatTimestamp(message.getAttribute('timestamp'));
+        // the component rewrites its timestamp attribute into the reader's format, which Date cannot parse back
+        const timestamp = formatTimestamp(message.getAttribute('data-timestamp'));
         const dateMarkup = timestamp
           ? '<span class="discord-transcript-pins-date">' + t.escapeHtml(timestamp) + '</span>'
           : '';
@@ -767,7 +769,7 @@ export const enableThreadModal = `
     const dateOf = (iso) => {
       const date = iso ? new Date(iso) : null;
       return date && !Number.isNaN(date.getTime())
-        ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        ? date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
         : '';
     };
     const avatarOf = (className, src) =>

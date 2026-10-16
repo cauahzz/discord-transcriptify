@@ -174,6 +174,13 @@ async function main() {
   check('content rendered', plain.includes('world'), true);
   check('not marked as forwarded', plain.includes('class="discord-forwarded"'), false);
 
+  check('the message carries its date as ISO', /data-timestamp="\d{4}-\d\d-\d\dT[\d:.]+Z"/.test(plain), true);
+  check(
+    'the pinned list reads that, not the attribute the component reformats',
+    (uiPinnedMessagesFeature.clientScript?.(resolveFeatures({})) ?? '').includes("getAttribute('data-timestamp')"),
+    true
+  );
+
   console.log('\n== ansi code block ==');
   const ansi = await render([
     message({ content: '```ansi\n\u001b[1;31mError\u001b[0m plain \u001b[4;32;40mok\u001b[0m\n```' }),

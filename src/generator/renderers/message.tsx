@@ -124,6 +124,7 @@ export default async function DiscordMessage({
       data-author-id={message.author.id}
       data-author-name={displayName(message.member, message.author)}
       data-pinned={message.pinned ? 'true' : undefined}
+      data-timestamp={message.createdAt.toISOString()}
     >
       <MessageReply message={message} context={context} />
 
