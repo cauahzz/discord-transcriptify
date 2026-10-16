@@ -87,9 +87,9 @@ push.
 
 ## What it renders
 
-- **Messages**: Discord markdown (bold, quotes, code blocks, spoilers, timestamps), mentions in their
-  role colour, replies, edits, reactions, slash command headers, and consecutive messages from the
-  same author grouped under one header.
+- **Messages**: Discord markdown (bold, quotes, code blocks with syntax highlighting or ANSI colours,
+  spoilers, timestamps), mentions in their role colour, replies, edits, reactions, slash command
+  headers, and consecutive messages from the same author grouped under one header.
 - **Embeds**: every field, including author, footer, thumbnail and image.
 - **Components V2**: container (accent colour, spoiler), text display, section with a thumbnail or
   button accessory, media gallery, file, separator, checkbox and radio group.
@@ -106,7 +106,7 @@ push.
 - **Stickers**: PNG, APNG and GIF as images. Lottie stickers show a placeholder with the sticker
   name, since they need a player script.
 - **System messages**: joins, pins, boosts and thread creation.
-- **Server tags** next to author names.
+- **Server tags and role icons** next to author names.
 
 ![A Components V2 container with a section, a thumbnail, a media gallery and buttons, followed by a voice message, a file card and a thread preview](./.github/assets/components.png)
 
