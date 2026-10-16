@@ -58,6 +58,7 @@ export class TranscriptImageDownloader {
     options: WebpCompressionOptions;
   };
   private allowPrivateNetwork = false;
+  private sharpCache = true;
   private headersTimeout = 10_000;
   private bodyTimeout = 30_000;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -151,12 +152,23 @@ export class TranscriptImageDownloader {
     return this;
   }
 
+  /**
+   * Turns sharp's operation cache (up to 50 MB by default) on or off, for the
+   * whole process. Prefer this to calling `sharp.cache(false)` yourself: the
+   * copy of sharp this library imports turns the cache back on when it loads.
+   */
+  withSharpCache(enabled: boolean) {
+    this.sharpCache = enabled;
+    return this;
+  }
+
   /** Loads sharp, or returns null when it is not installed. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async loadSharp(): Promise<any | null> {
     if (this.sharpModule !== null) return this.sharpModule;
     try {
       this.sharpModule = await import('sharp');
+      if (!this.sharpCache) (this.sharpModule.default || this.sharpModule).cache(false);
       return this.sharpModule;
     } catch {
       this.log('sharp not installed - compression and resize disabled');

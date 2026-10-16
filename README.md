@@ -255,6 +255,8 @@ saveImages: {
   quality: 60,
   maxWidth: 1200,
   maxHeight: 1200,
+  webp: true, // convert to WebP, usually smaller
+  sharpCache: false, // turn off sharp's cache of decoded images
 },
 ```
 
@@ -276,6 +278,7 @@ await createTranscript(channel, {
       .withMaxDimensions(1200, 1200) // resize to fit, needs sharp
       .withCompression(60, true) // 60% quality, convert to webp, needs sharp
       .withTimeout(10_000, 30_000) // headers and body timeouts, in ms
+      .withSharpCache(false) // see Memory use
       .build(),
   },
 });
@@ -309,9 +312,13 @@ it is embedded:
 
 ```js
 await createTranscript(channel, {
-  saveImages: { maxTotalSizeKb: 10240, maxSizeKb: 2048, concurrency: 2 },
+  saveImages: { maxTotalSizeKb: 10240, maxSizeKb: 2048, concurrency: 2, sharpCache: false },
 });
 ```
+
+`sharpCache: false` turns off sharp's cache of decoded images, which holds up to 50 MB. The setting
+applies to the whole process. Set it here rather than with `sharp.cache(false)` in your bot: the copy
+of sharp the library imports is loaded on the first image and turns the cache back on.
 
 The file itself is also built in memory, so expect a peak of a few times the size of the finished
 transcript. If that is still too much, do not embed at all: give `resolveImageSrc` a function that

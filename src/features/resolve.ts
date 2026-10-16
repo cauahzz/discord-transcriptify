@@ -42,6 +42,8 @@ export function resolveFeatures(options: FeatureOptions = {}): ResolvedFeatures 
       quality: 75,
       maxWidth: 800,
       maxHeight: 800,
+      webp: false,
+      sharpCache: true,
     }),
     voiceMessages: normalize(options.saveVoiceMessages, { maxSizeKb: 25600, maxTotalSizeKb: 51200 }),
     threadMessages: normalize(options.saveThreadMessages, { limit: 500 }),

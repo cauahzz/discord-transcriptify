@@ -7,7 +7,8 @@ export const imagesFeature: FeatureDescriptor = {
   callbacks: ({ images }) => ({
     resolveImageSrc: new TranscriptImageDownloader()
       .withMaxDimensions(images.maxWidth, images.maxHeight)
-      .withCompression(images.quality)
+      .withCompression(images.quality, images.webp)
+      .withSharpCache(images.sharpCache)
       .withMaxSize(images.maxSizeKb)
       .withMaxTotalSize(images.maxTotalSizeKb)
       .withConcurrency(images.concurrency)

@@ -194,6 +194,23 @@ async function main() {
     const highQuality = await atQuality(90);
     check('a jpeg stays a jpeg', lowQuality.startsWith('data:image/jpeg;base64,'), true);
     check('and a lower quality makes it smaller', lowQuality.length < highQuality.length, true);
+
+    const webp = String(
+      await new TranscriptImageDownloader().withCompression(75, true).withAllowPrivateNetwork().build()(
+        fake(jpegUrl),
+        {} as never
+      )
+    );
+    check('convertToWebP turns a jpeg into webp', webp.startsWith('data:image/webp;base64,'), true);
+
+    // last in this block: the cache setting is global to the process
+    check('the sharp cache is on by default', sharp.cache().items.max > 0, true);
+    await new TranscriptImageDownloader()
+      .withCompression(75)
+      .withSharpCache(false)
+      .withAllowPrivateNetwork()
+      .build()(fake(jpegUrl), {} as never);
+    check('withSharpCache(false) turns it off', sharp.cache().items.max, 0);
     jpegServer.close();
   }
 

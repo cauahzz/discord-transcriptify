@@ -38,6 +38,13 @@ export type SaveImagesOptions = Partial<{
   maxWidth: number;
   /** Tallest an image may be before it is resized, in pixels. @default 800 */
   maxHeight: number;
+  /** Convert every image to WebP, which is usually smaller. GIF and SVG files are kept as they are. @default false */
+  webp: boolean;
+  /**
+   * Keep sharp's operation cache, which holds up to 50 MB of decoded images.
+   * `false` turns it off for the whole process. @default true
+   */
+  sharpCache: boolean;
 }>;
 
 /** The interactive features that `ui` can switch on and off one by one. */

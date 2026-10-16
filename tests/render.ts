@@ -791,6 +791,10 @@ async function main() {
   check('an object enables it', custom.images.enabled, true);
   check('an object overrides its fields', `${custom.images.maxSizeKb}/${custom.images.quality}`, '512/60');
   check('an object keeps the other defaults', custom.images.maxWidth, 800);
+  check('webp off by default', on.images.webp, false);
+  check('sharp cache kept by default', on.images.sharpCache, true);
+  const webpNoCache = resolveFeatures({ saveImages: { webp: true, sharpCache: false } }).images;
+  check('webp and sharpCache can be set', `${webpNoCache.webp}/${webpNoCache.sharpCache}`, 'true/false');
 
   check('saveVoiceMessages off by default', off.voiceMessages.enabled, false);
   check('voice defaults present even when off', off.voiceMessages.maxSizeKb, 25600);

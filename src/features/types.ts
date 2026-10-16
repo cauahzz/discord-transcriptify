@@ -15,6 +15,8 @@ export type ResolvedFeatures = {
     quality: number;
     maxWidth: number;
     maxHeight: number;
+    webp: boolean;
+    sharpCache: boolean;
   };
   voiceMessages: { enabled: boolean; maxSizeKb: number; maxTotalSizeKb: number };
   threadMessages: { enabled: boolean; limit: number };
