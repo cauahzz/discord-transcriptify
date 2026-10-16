@@ -6,6 +6,11 @@ All notable changes to this project are listed here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- discord.js 14.19 or newer is required (the peer range was `^14.0.0`). Components V2 only exist from
+  14.19, and older versions rendered those messages without their components.
+
 ### Added
 
 - `saveImages.webp` converts embedded images to WebP.

@@ -126,7 +126,7 @@ Clicking an image opens it full-screen.
 ## Requirements
 
 - Node.js 18.17 or newer
-- discord.js v14 or v15
+- discord.js 14.19 or newer, or v15. Components V2 arrived in 14.19.
 - [`sharp`](https://sharp.pixelplumbing.com/) is optional. Install it only if you want embedded
   images resized or compressed.
 

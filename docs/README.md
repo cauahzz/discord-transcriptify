@@ -8,7 +8,7 @@ discord-transcriptify is a node.js module to generate nice-looking HTML transcri
 
 ## Getting Started
 
-To get started with `discord-transcriptify` install the module and ensure you are running `discord.js^14`
+To get started with `discord-transcriptify` install the module and ensure you are running discord.js 14.19 or newer, or v15
 
 {% tabs %}
 {% tab title="NPM" %}
