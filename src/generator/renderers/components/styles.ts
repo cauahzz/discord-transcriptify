@@ -209,6 +209,20 @@ export const globalStyles = `
     margin-top: 2px;
   }
 
+  /* fixed-width children (select menus, file cards) would otherwise stretch the column past a narrow screen */
+  discord-messages .discord-message-content {
+    min-width: 0;
+  }
+
+  discord-messages discord-attachments.discord-attachments {
+    grid-template-columns: minmax(0, 100%);
+  }
+
+  discord-messages discord-attachments.discord-attachments > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   discord-action-row.discord-action-row {
     flex-wrap: wrap;
     gap: 8px;
@@ -2024,6 +2038,11 @@ export const globalStyles = `
     transform-origin: center right;
   }
 
+  /* collapsed, its hidden contents would still widen the page */
+  .discord-transcript-header-search-slot .discord-transcript-search-shell:not(.is-open) .discord-transcript-search {
+    overflow: hidden;
+  }
+
   .discord-transcript-header-search-slot .discord-transcript-search-bar {
     box-shadow: none;
   }
@@ -2346,6 +2365,23 @@ export const globalStyles = `
     .discord-image-preview-stage {
       max-width: calc(100vw - 32px);
       max-height: calc(100vh - 32px);
+    }
+
+    /* an open search takes the whole header, as there is no room beside the channel name */
+    .discord-transcript-header-bar:has(.discord-transcript-search-shell.is-open) .discord-transcript-header-main,
+    .discord-transcript-header-bar:has(.discord-transcript-search-shell.is-open)
+      .discord-transcript-header-tools
+      > :not(.discord-transcript-header-search-slot) {
+      display: none;
+    }
+
+    .discord-transcript-header-bar:has(.discord-transcript-search-shell.is-open) .discord-transcript-header-tools,
+    .discord-transcript-header-search-slot:has(.is-open),
+    .discord-transcript-header-search-slot .discord-transcript-search-shell.is-open,
+    .discord-transcript-header-search-slot .discord-transcript-search-shell.is-open .discord-transcript-search {
+      flex: 1 1 auto;
+      width: auto;
+      max-width: none;
     }
 
     .discord-transcript-header-bar {
