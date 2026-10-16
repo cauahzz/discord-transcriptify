@@ -20,7 +20,7 @@ export const enableImagePreview = `
   overlay.className = 'discord-image-preview-overlay';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-label', 'Image preview');
-  overlay.tabIndex = -1;
+  overlay.setAttribute('aria-modal', 'true');
   overlay.innerHTML = \`
     <button type="button" class="discord-image-preview-close" aria-label="Close image preview">
       <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
@@ -33,6 +33,7 @@ export const enableImagePreview = `
   \`;
 
   const previewImage = overlay.querySelector('.discord-image-preview-image');
+  const closeButton = overlay.querySelector('.discord-image-preview-close');
   let previousOverflow = '';
   let opener = null;
 
@@ -41,6 +42,8 @@ export const enableImagePreview = `
     previewImage.removeAttribute('src');
     previewImage.alt = '';
     document.body.style.overflow = previousOverflow;
+    // a clicked image is not focusable, so the opener is often the body and focus would stay on the hidden button
+    closeButton.blur();
     // the opener may have been removed from the page meanwhile
     if (opener && document.contains(opener)) opener.focus();
     opener = null;
@@ -53,7 +56,7 @@ export const enableImagePreview = `
     previewImage.alt = image.alt || 'Image preview';
     overlay.classList.add('is-open');
     document.body.style.overflow = 'hidden';
-    overlay.focus();
+    closeButton.focus();
   };
 
   const isPreviewable = (image) => {
@@ -90,7 +93,13 @@ export const enableImagePreview = `
     );
 
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && overlay.classList.contains('is-open')) closePreview();
+      if (!overlay.classList.contains('is-open')) return;
+      if (event.key === 'Escape') closePreview();
+      // the close button is the only control, so Tab stays on it instead of reaching the page behind
+      if (event.key === 'Tab') {
+        event.preventDefault();
+        closeButton.focus();
+      }
     });
   });
 })();
