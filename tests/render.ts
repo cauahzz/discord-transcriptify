@@ -1132,7 +1132,9 @@ async function main() {
     source(uiImagePreviewFeature).includes("'aria-label', 'Image preview'"),
     true
   );
-  check('and does not claim to be modal', source(uiImagePreviewFeature).includes('aria-modal'), false);
+  // modal only because Tab is held on the close button; drop aria-modal if that trap goes
+  check('and is modal', source(uiImagePreviewFeature).includes("'aria-modal', 'true'"), true);
+  check('with Tab held inside', source(uiImagePreviewFeature).includes("event.key === 'Tab'"), true);
 
   // the DOM tests below run the scripts, but a syntax error would surface there as a crash rather than a failed check
   for (const [name, script] of [['prelude', prelude], ...scriptsOf.map(([name, feature]) => [name, source(feature)])]) {
