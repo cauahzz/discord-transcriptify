@@ -205,11 +205,10 @@ async function main() {
 
     // last in this block: the cache setting is global to the process
     check('the sharp cache is on by default', sharp.cache().items.max > 0, true);
-    await new TranscriptImageDownloader()
-      .withCompression(75)
-      .withSharpCache(false)
-      .withAllowPrivateNetwork()
-      .build()(fake(jpegUrl), {} as never);
+    await new TranscriptImageDownloader().withCompression(75).withSharpCache(false).withAllowPrivateNetwork().build()(
+      fake(jpegUrl),
+      {} as never
+    );
     check('withSharpCache(false) turns it off', sharp.cache().items.max, 0);
     jpegServer.close();
   }
