@@ -174,6 +174,15 @@ async function main() {
   check('content rendered', plain.includes('world'), true);
   check('not marked as forwarded', plain.includes('class="discord-forwarded"'), false);
 
+  console.log('\n== join message ==');
+  const joinText = async (timestamp: number) => {
+    const html = await render([message({ id: SnowflakeUtil.generate({ timestamp }).toString(), type: 7 })]);
+    return (html.match(/type="join"[^>]*>([\s\S]*?)<\/discord-system-message>/)?.[1] ?? '').replace(/<[^>]+>/g, '');
+  };
+  const joinedAt = Date.parse('2026-01-01T00:00:00Z');
+  check('the same join message always gets the same text', await joinText(joinedAt), await joinText(joinedAt));
+  check('another date can get another text', (await joinText(joinedAt)) !== (await joinText(joinedAt + 1)), true);
+
   console.log('\n== forwarded message ==');
   const forwarded = await render([
     message({

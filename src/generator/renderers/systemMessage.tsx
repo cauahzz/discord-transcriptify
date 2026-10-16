@@ -18,7 +18,7 @@ export default async function SystemMessage({ message, context }: { message: Mes
           timestamp={message.createdAt.toISOString()}
           type="join"
         >
-          <JoinMessage member={message.member} fallbackUser={message.author} />
+          <JoinMessage member={message.member} fallbackUser={message.author} timestamp={message.createdTimestamp} />
         </DiscordSystemMessage>
       );
 
@@ -270,10 +270,19 @@ const allJoinMessages = [
   "Hello. Is it {user} you're looking for?",
 ];
 
-export function JoinMessage({ member, fallbackUser }: { member: GuildMember | null; fallbackUser: User }) {
-  const randomMessage = allJoinMessages[Math.floor(Math.random() * allJoinMessages.length)];
+export function JoinMessage({
+  member,
+  fallbackUser,
+  timestamp,
+}: {
+  member: GuildMember | null;
+  fallbackUser: User;
+  timestamp: number;
+}) {
+  // picked from the date, so exporting the same channel twice gives the same text
+  const template = allJoinMessages[timestamp % allJoinMessages.length];
 
-  return randomMessage
+  return template
     .split('{user}')
     .flatMap((item, i) => [
       item,
