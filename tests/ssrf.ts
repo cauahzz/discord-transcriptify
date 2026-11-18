@@ -7,6 +7,7 @@
  */
 import http from 'node:http';
 import { inspect } from 'node:util';
+import { EmbeddedFiles } from '../src/downloader/embedded';
 import { TranscriptImageDownloader } from '../src/downloader/images';
 import { buildVoiceFetcher } from '../src/features/voiceMessages';
 import { isAllowedProtocol, isBlockedAddress } from '../src/utils/ssrf';
@@ -307,6 +308,25 @@ async function main() {
   const cappedVoice = buildVoiceFetcher({ maxSizeKb: 64, maxTotalSizeKb: 0.05, allowPrivateNetwork: true });
   check('the first voice message fits the total', typeof (await cappedVoice(voice('a.ogg'), {} as never)), 'string');
   check('the next one does not', await cappedVoice(voice('a.ogg'), {} as never), undefined);
+
+  // --- generateFromMessages keeps every embedded file as bytes and splices it in at the end ---
+  console.log('\n== downloads kept for the page ==');
+  const files = new EmbeddedFiles();
+  const gifSource = String(
+    await new TranscriptImageDownloader().withAllowPrivateNetwork().build()(
+      fake(`http://127.0.0.1:${gifPort}/a.gif`),
+      {} as never
+    )
+  );
+  const gifToken = files.adopt(gifSource);
+  const voiceToken = files.adopt(String(voiceOk));
+  check('a downloaded image is kept', gifToken !== gifSource, true);
+  check('so is a downloaded voice message', voiceToken !== String(voiceOk), true);
+  check(
+    'and both come back as they were downloaded',
+    files.splice(Buffer.from(`${gifToken} ${voiceToken}`)).toString(),
+    `${gifSource} ${String(voiceOk)}`
+  );
 
   slowServer.close();
   server.close();

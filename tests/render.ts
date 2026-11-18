@@ -19,6 +19,8 @@ import {
 } from 'discord.js';
 import { createRequire } from 'node:module';
 import { ExportReturnType, generateFromMessages } from '../src';
+import { adoptingSources, EmbeddedFiles } from '../src/downloader/embedded';
+import renderPage from '../src/generator';
 import { activeFeatures, resolveFeatures, type FeatureDescriptor } from '../src/features';
 import { uiImagePreviewFeature } from '../src/features/ui/imagePreview';
 import { uiMemberListFeature } from '../src/features/ui/memberList';
@@ -167,6 +169,8 @@ function messageWithThread(total: number, options: { fail?: boolean; delay?: boo
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 const INLINED = 'data:image/png;base64,INLINED';
+
+const toDataUrl = (type: string, data: Buffer) => `data:${type};base64,${data.toString('base64')}`;
 
 async function main() {
   console.log('\n== plain message ==');
@@ -835,6 +839,146 @@ async function main() {
     readsBack((await returned(ExportReturnType.Buffer, true)).toString('utf8')),
     true
   );
+
+  console.log('\n== embedded files ==');
+  const fileOf = (n: number, mod = 251) => Buffer.from(Array.from({ length: n }, (_, i) => (i * 7 + (i >> 8)) % mod));
+  const pngUrl = toDataUrl('image/png', fileOf(10));
+  const oggUrl = toDataUrl('audio/ogg', fileOf(11));
+  const store = new EmbeddedFiles();
+  const twice = store.adopt(pngUrl);
+  const unused = store.adopt(toDataUrl('image/png', fileOf(20)));
+  const once = store.adopt(oggUrl);
+  check(
+    'a data url becomes a token with the same type',
+    twice.startsWith('data:image/png;base64,') && twice !== pngUrl,
+    true
+  );
+  check('whose payload is plain hex', /^[0-9a-f]{40}$/.test(twice.split(',')[1]), true);
+  check('each file gets its own token', new Set([twice, unused, once]).size, 3);
+  check(
+    'the type is kept as written',
+    store.adopt('data:undefined;base64,QUJD').startsWith('data:undefined;base64,'),
+    true
+  );
+  for (const [name, source] of [
+    ['a url', 'https://example.com/a.png'],
+    ['a data url without base64', 'data:image/svg+xml,<svg/>'],
+    ['an empty payload', 'data:image/png;base64,'],
+    ['base64 with a line break', 'data:image/png;base64,QUJD\nREVG'],
+    ['url-safe base64', 'data:image/png;base64,-_8A'],
+    ['base64 without padding', 'data:image/png;base64,QQ'],
+    ['base64 with stray bits at the end', 'data:image/png;base64,QR=='],
+  ]) {
+    // each of these decodes, but would not be written back the same
+    check(`${name} is left as it is`, store.adopt(source), source);
+  }
+
+  const expected = `<a src="${pngUrl}">ü<b src="${oggUrl}">${pngUrl}</b>`;
+  const spliced = store.splice(Buffer.from(`<a src="${twice}">ü<b src="${once}">${twice}</b>`));
+  check('splice writes each file where its token was, every time it appears', spliced.toString('utf8'), expected);
+  check('the output is allocated at its exact size', spliced.length, Buffer.byteLength(expected));
+  // past the step of 3 MB that is encoded at a time, so the steps have to join without padding
+  const largeUrl = toDataUrl('audio/ogg', fileOf(7 * 1024 * 1024 + 1, 256));
+  const largeStore = new EmbeddedFiles();
+  check(
+    'a file larger than one encoding step comes back the same',
+    largeStore.splice(Buffer.from(`[${largeStore.adopt(largeUrl)}]`)).toString() === `[${largeUrl}]`,
+    true
+  );
+  const blank = new EmbeddedFiles();
+  const page = Buffer.from('<p>no files</p>');
+  check('an empty store hands the page back untouched', blank.splice(page) === page, true);
+  const unshown = new EmbeddedFiles();
+  unshown.adopt(pngUrl);
+  check('a page that shows none of the files is handed back without a copy', unshown.splice(page) === page, true);
+  // the first splice released the files, so a second page would be left with tokens for sources
+  const splicedTwice = (() => {
+    try {
+      store.splice(Buffer.from(twice));
+      return false;
+    } catch {
+      return true;
+    }
+  })();
+  check('a store splices a single page', splicedTwice, true);
+
+  const wrapped = new EmbeddedFiles();
+  const adopting = adoptingSources((source: string | null) => source, wrapped);
+  check('a wrapped callback hands a token on', (await adopting(pngUrl))?.startsWith('data:image/png;base64,'), true);
+  check('and not the data url', (await adopting(pngUrl)) === pngUrl, false);
+  check('null still means leave it out', await adopting(null), null);
+
+  // every place an image or a voice message can be, through generateFromMessages and through the
+  // renderer alone, which still gets the data urls themselves
+  const everywhere = [
+    message({ attachments: [imageFile(1)] }),
+    message({ attachments: images(2) }),
+    message({ embeds: [embed] }),
+    section,
+    message({
+      flags: 1 << 15, // IsComponentsV2
+      components: [
+        {
+          type: 12,
+          id: 1,
+          items: [1, 2].map((n) => ({ media: { url: `https://example.com/m${n}.png`, width: 10, height: 10 } })),
+        },
+      ],
+    }),
+    message({ sticker_items: [sticker('307', 'wave', 1)] }),
+    message({ flags: 8192, attachments: [voiceFile()] }),
+  ];
+  // the bytes depend on the url only, so both renders embed the same file whatever order they resolve in
+  const bytesFor = (url: string) => fileOf(30 + (url.length % 3), 256 - (url.length % 7));
+  const everywhereCallbacks = {
+    resolveChannel: () => null,
+    resolveUser: () => null,
+    resolveRole: () => null,
+    resolveImageSrc: (attachment: APIAttachment) => toDataUrl('image/png', bytesFor(attachment.url)),
+    resolveVoiceSrc: (attachment: APIAttachment) => toDataUrl('audio/ogg', bytesFor(attachment.url)),
+  };
+  // the hydrated page carries a random build id, the only part that may differ between two renders
+  const withoutBuildId = (page: string) => page.replace(/data-stencil-build="[^"]*"/g, '');
+  for (const hydrate of [false, true]) {
+    const spliceLines: string[] = [];
+    const previousSpliceLog = debug.log;
+    debug.log = (...args: unknown[]) => spliceLines.push(args.join(' '));
+    debug.enable('discord-transcriptify:embedded');
+    const exported = await generateFromMessages(everywhere, channel, {
+      returnType: ExportReturnType.String,
+      hydrate,
+      fetchMembers: false,
+      callbacks: everywhereCallbacks,
+    });
+    debug.disable();
+    debug.log = previousSpliceLog;
+    // without it the comparison below would also pass, with the base64 held through the whole render
+    check(
+      `${hydrate ? 'hydrated' : 'plain'}: the caller's data urls reached the renderer as tokens`,
+      spliceLines.some((line) => /Spliced \d+ file\(s\)/.test(line)),
+      true
+    );
+    const rendered = await renderPage({
+      messages: everywhere,
+      channel,
+      features: resolveFeatures({ fetchMembers: false }),
+      threads: new Map(),
+      filtered: false,
+      callbacks: everywhereCallbacks,
+      poweredBy: true,
+      footerText: 'Exported {number} message{s}.',
+      favicon: 'guild',
+      hydrate,
+    });
+    const label = hydrate ? 'hydrated' : 'plain';
+    check(`${label}: every file was embedded`, exported.split(';base64,').length - 1 >= everywhere.length, true);
+    check(
+      `${label}: the exported page is what the renderer makes with the data urls, byte for byte`,
+      withoutBuildId(exported) === withoutBuildId(rendered.toString()),
+      true
+    );
+    check(`${label}: no image preload is added for a token`, exported.includes('rel="preload"'), false);
+  }
 
   console.log('\n== features ==');
   const off = resolveFeatures({});

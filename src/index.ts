@@ -1,5 +1,5 @@
 import { AttachmentBuilder, version, Collection, type Channel, type Message, type TextBasedChannel } from 'discord.js';
-import DiscordMessages from './generator';
+import DiscordMessages, { type RenderMessageContext } from './generator';
 import {
   ExportReturnType,
   type CreateTranscriptOptions,
@@ -7,6 +7,7 @@ import {
   type ObjectType,
 } from './types';
 import { activeFeatures, resolveFeatures, type CollectContext } from './features';
+import { adoptingSources, EmbeddedFiles } from './downloader/embedded';
 import { getDefaultFilename } from './utils/filename';
 
 export { default as DiscordMessages } from './generator/transcript';
@@ -68,27 +69,37 @@ export async function generateFromMessages<T extends ExportReturnType = ExportRe
     await feature.collect?.(transformedMessages, collectContext);
   }
 
-  const html = await DiscordMessages({
+  const callbacks: RenderMessageContext['callbacks'] = {
+    resolveImageSrc: (attachment) => attachment.url,
+    resolveVoiceSrc: (attachment) => attachment.url,
+    resolveChannel: async (id) => channel.client.channels.fetch(id).catch(() => null),
+    resolveUser: async (id) => channel.client.users.fetch(id).catch(() => null),
+    resolveRole: channel.isDMBased() ? () => null : async (id) => channel.guild?.roles.fetch(id).catch(() => null),
+
+    ...Object.assign({}, ...enabledFeatures.map((feature) => feature.callbacks?.(features, collectContext))),
+    ...(options.callbacks ?? {}),
+  };
+
+  // every embedded file, from saveImages or from the caller's own callback, waits here as bytes
+  // and goes into the page after it is rendered, so the renderer never holds its base64
+  const files = new EmbeddedFiles();
+  callbacks.resolveImageSrc = adoptingSources(callbacks.resolveImageSrc, files);
+  callbacks.resolveVoiceSrc = adoptingSources(callbacks.resolveVoiceSrc, files);
+
+  const rendered = await DiscordMessages({
     messages: transformedMessages,
     channel,
     features,
     threads: collectContext.threads,
     filtered: collectContext.filter !== undefined,
-    callbacks: {
-      resolveImageSrc: (attachment) => attachment.url,
-      resolveVoiceSrc: (attachment) => attachment.url,
-      resolveChannel: async (id) => channel.client.channels.fetch(id).catch(() => null),
-      resolveUser: async (id) => channel.client.users.fetch(id).catch(() => null),
-      resolveRole: channel.isDMBased() ? () => null : async (id) => channel.guild?.roles.fetch(id).catch(() => null),
-
-      ...Object.assign({}, ...enabledFeatures.map((feature) => feature.callbacks?.(features, collectContext))),
-      ...(options.callbacks ?? {}),
-    },
+    callbacks,
     poweredBy: options.poweredBy ?? true,
     footerText: options.footerText ?? 'Exported {number} message{s}.',
     favicon: options.favicon ?? 'guild',
     hydrate: options.hydrate ?? false,
   });
+
+  const html = files.empty ? rendered : files.splice(typeof rendered === 'string' ? Buffer.from(rendered) : rendered);
 
   if (options.returnType === ExportReturnType.String) {
     return (typeof html === 'string' ? html : html.toString('utf8')) as unknown as ObjectType<T>;
