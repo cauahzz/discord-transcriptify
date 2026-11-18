@@ -6,6 +6,8 @@ All notable changes to this project are listed here. The format follows
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-18
+
 ### Changed
 
 - `saveImages` downloads and processes two images at a time instead of four, which lowers the memory
@@ -48,6 +50,7 @@ All notable changes to this project are listed here. The format follows
 
 First release.
 
-[Unreleased]: https://github.com/cauahzz/discord-transcriptify/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/cauahzz/discord-transcriptify/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/cauahzz/discord-transcriptify/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/cauahzz/discord-transcriptify/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/cauahzz/discord-transcriptify/releases/tag/v1.0.0
