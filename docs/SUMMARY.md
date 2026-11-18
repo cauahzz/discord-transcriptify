@@ -6,3 +6,7 @@
 
 - [createTranscript](api-reference/createtranscript.md)
 - [generateFromMessages](api-reference/generatefrommessages.md)
+
+## Guides
+
+- [Memory in depth](memory.md)

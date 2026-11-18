@@ -43,7 +43,7 @@ const DEFAULT_MAX_SIZE_KB = 10240;
 /**
  * Default number of images downloaded and processed at the same time. Kept low
  * because each one in flight holds its decoded pixels, and on glibc the peak
- * stays in the process after the transcript is done.
+ * stays in the process after the transcript is done (see docs/memory.md).
  */
 const DEFAULT_CONCURRENCY = 2;
 

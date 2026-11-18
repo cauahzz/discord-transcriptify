@@ -324,6 +324,9 @@ The file itself is also built in memory, so expect a peak of a few times the siz
 transcript. If that is still too much, do not embed at all: give `resolveImageSrc` a function that
 uploads the image to your own storage and returns its URL.
 
+[Memory in depth](./docs/memory.md) explains where that memory goes and how to tune a host with
+little of it.
+
 ## Security
 
 A transcript is built from content that anyone in the channel can write, so the library treats all

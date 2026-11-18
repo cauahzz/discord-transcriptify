@@ -14,6 +14,11 @@ All notable changes to this project are listed here. The format follows
 - `returnType: 'buffer'` and `'attachment'` no longer turn the page into a string and back, which kept
   two extra copies of it in memory. The file is byte for byte the same.
 
+### Added
+
+- [Memory in depth](./docs/memory.md), a guide to the memory a transcript uses and how to tune a host
+  with little of it.
+
 ## [1.1.0] - 2026-10-16
 
 ### Changed

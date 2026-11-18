@@ -142,7 +142,7 @@ When several images share a message they are shown as one grid. GIF and SVG imag
 
 Pass an object instead of `true` to change the limits: `{ maxSizeKb: 10240, maxTotalSizeKb: 51200, concurrency: 2, quality: 75, maxWidth: 800, maxHeight: 800 }` are the defaults, and any field you leave out keeps its default. `quality` applies to JPEG and WebP images; PNG images are resized but stay lossless.
 
-`maxSizeKb` limits one image and `maxTotalSizeKb` limits all embedded images together, counted on what ends up in the file. Once the total is reached the remaining images keep their original URL, which bounds the memory a transcript with many images needs. `concurrency` is how many images are downloaded and processed at the same time. Zero or less turns the total or the concurrency limit off.
+`maxSizeKb` limits one image and `maxTotalSizeKb` limits all embedded images together, counted on what ends up in the file. Once the total is reached the remaining images keep their original URL, which bounds the memory a transcript with many images needs. `concurrency` is how many images are downloaded and processed at the same time. Zero or less turns the total or the concurrency limit off. [Memory in depth](../memory.md) explains how these limits shape the memory a bot uses.
 
 The default value is `false`
 
