@@ -15,23 +15,25 @@ steps:
 1. The download is read into a buffer, up to `maxSizeKb`.
 2. With `sharp`, the image is decoded into raw pixels, resized and encoded again. The decoded image
    is several times larger than the file.
-3. The result becomes a base64 data URL, a third larger than the bytes, and stays in memory until the
-   page is rendered.
+3. The result is kept as bytes until the page is rendered.
 
 `concurrency` limits how many images are in steps 1 and 2 at the same time, and `maxTotalSizeKb`
-limits how much is held after step 3.
+limits how much is held after step 3. Voice messages from `saveVoiceMessages` are kept the same way,
+and so is every base64 data URL that a `resolveImageSrc` or `resolveVoiceSrc` of your own returns.
 
-Then the page is rendered. React writes it in chunks, which are joined into one buffer, so for a
-moment the page exists twice. What comes after depends on `returnType`:
+Then the page is rendered with a short placeholder in place of each embedded file, so the renderer
+only holds the text of the page. Its chunks are joined into one buffer, and the files are written
+into a final buffer of the exact size, each one released once it is written for the last time. What
+comes after depends on `returnType`:
 
-| Output                       | Extra copies of the page                                                      |
-| ---------------------------- | ----------------------------------------------------------------------------- |
-| `'attachment'` or `'buffer'` | None: you get the buffer the chunks were joined into.                         |
-| `'string'`                   | One, the string.                                                              |
-| Any of them, with `hydrate`  | A string to parse, a DOM built from it, and the string the DOM is written to. |
+| Output                       | Extra copies of the page                                                                                                                                        |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `'attachment'` or `'buffer'` | None: you get the final buffer.                                                                                                                                 |
+| `'string'`                   | One, the string.                                                                                                                                                |
+| Any of them, with `hydrate`  | Before the files go in, a string to parse, a DOM built from it, and the string the DOM is written to. A hydrated file shows most images twice, so it is larger. |
 
-So the peak of one transcript is roughly the images in flight, plus the embedded data URLs, plus
-twice the finished file.
+So the peak of one transcript is roughly the images in flight, plus the embedded files, plus the
+finished file, twice with `'string'`.
 
 ## Why the memory can stay up afterwards
 
@@ -97,7 +99,7 @@ They only apply to glibc. On Alpine (musl), Windows and macOS they are ignored.
 | `saveImages.concurrency`           | Images downloaded and decoded at the same time. `1` gives the lowest peak, at the cost of time.       |
 | `saveImages.maxSizeKb`             | The largest download.                                                                                 |
 | `saveImages.maxWidth`, `maxHeight` | The size of each image once it is embedded.                                                           |
-| `saveImages.maxTotalSizeKb`        | The data URLs held until the render, and with them the size of the page.                              |
+| `saveImages.maxTotalSizeKb`        | The images held until the page is written, and with them the size of the page.                        |
 | `saveImages.sharpCache: false`     | sharp's cache of decoded images, up to 50 MB.                                                         |
 | `returnType`                       | See the table above. `'attachment'` and `'buffer'` cost less than `'string'`, and `hydrate` the most. |
 
@@ -157,3 +159,6 @@ function memory() {
 
 Log it before and after each transcript. One run varies by several megabytes, so compare a few
 transcripts of the same channel rather than a single pair.
+
+With `DEBUG=discord-transcriptify:embedded`, each transcript logs how many files went into the page
+and its size before and after.

@@ -6,6 +6,21 @@ All notable changes to this project are listed here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Embedded images and voice messages are kept as bytes while the page is rendered and written into it
+  at the end, instead of going through the renderer as base64. This also covers a `resolveImageSrc`
+  or `resolveVoiceSrc` of your own that returns base64 data URLs. The file is byte for byte the same.
+  With a 47 MB page, the peak went down by about a fifth and the memory kept afterwards by about a
+  third. With `hydrate`, the peak went from about 2.4 GB to 0.5 GB, and the time from about 15
+  seconds to 2.
+
+### Fixed
+
+- Without compression, an image whose server sends no content type keeps its URL instead of being
+  embedded as `data:undefined`, and an embedded original carries only its media type, without
+  parameters such as `charset`.
+
 ## [1.1.1] - 2026-11-18
 
 ### Changed

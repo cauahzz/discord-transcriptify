@@ -320,7 +320,7 @@ await createTranscript(channel, {
 applies to the whole process. Set it here rather than with `sharp.cache(false)` in your bot: the copy
 of sharp the library imports is loaded on the first image and turns the cache back on.
 
-The file itself is also built in memory, so expect a peak of a few times the size of the finished
+The file itself is also built in memory, so expect a peak of about twice the size of the finished
 transcript. If that is still too much, do not embed at all: give `resolveImageSrc` a function that
 uploads the image to your own storage and returns its URL.
 
