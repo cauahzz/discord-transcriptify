@@ -272,7 +272,11 @@ export class TranscriptImageDownloader {
       }
     }
 
-    // sharp missing or failed: embed the original
-    return `data:${mimetype};base64,${buffer.toString('base64')}`;
+    // sharp missing or failed: embed the original, if the server said what it is
+    if (!baseType) {
+      this.log(`Skipping ${attachment.id}: the response has no content type to embed it with`);
+      return undefined;
+    }
+    return `data:${baseType};base64,${buffer.toString('base64')}`;
   }
 }

@@ -238,6 +238,29 @@ async function main() {
   check('svg becomes an svg data uri', svg.startsWith('data:image/svg+xml;base64,'), true);
   check('svg bytes are exactly what was served', Buffer.from(svg.split(',')[1], 'base64').equals(svgBytes), true);
 
+  // --- without compression the original is embedded under the type the server gave ---
+  console.log('\n== type of an uncompressed image ==');
+  const typedServer = http.createServer((req, res) => {
+    res.writeHead(200, req.url === '/untyped.png' ? {} : { 'content-type': 'Image/PNG; charset=binary' });
+    res.end('PNG-BYTES');
+  });
+  await new Promise<void>((r) => typedServer.listen(0, '127.0.0.1', r));
+  const typedPort = (typedServer.address() as { port: number }).port;
+  const uncompressed = new TranscriptImageDownloader().withAllowPrivateNetwork().build();
+  check(
+    'the type is reduced to the media type',
+    String(await uncompressed(fake(`http://127.0.0.1:${typedPort}/typed.png`), {} as never)).startsWith(
+      'data:image/png;base64,'
+    ),
+    true
+  );
+  check(
+    'an image served without a type keeps its url',
+    await uncompressed(fake(`http://127.0.0.1:${typedPort}/untyped.png`), {} as never),
+    undefined
+  );
+  typedServer.close();
+
   // --- the total and the concurrency are what keep a transcript with many images inside the memory it has ---
   console.log('\n== total size and concurrency ==');
   let inFlight = 0;
