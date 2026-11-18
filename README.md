@@ -241,7 +241,7 @@ galleries and thumbnails. By default:
   it they are embedded untouched
 - files over 10 MB are skipped and keep their original URL
 - once the embedded images add up to 50 MB, the remaining ones keep their original URL
-- four images are downloaded at a time
+- two images are downloaded at a time
 - GIF and SVG files are embedded as they are
 - videos are not embedded
 
@@ -251,7 +251,7 @@ Pass an object to change the limits:
 saveImages: {
   maxSizeKb: 5120, // per image
   maxTotalSizeKb: 20480, // all images together
-  concurrency: 2, // downloads at the same time
+  concurrency: 1, // downloads at the same time
   quality: 60,
   maxWidth: 1200,
   maxHeight: 1200,
@@ -274,7 +274,7 @@ await createTranscript(channel, {
     resolveImageSrc: new TranscriptImageDownloader()
       .withMaxSize(5120) // in KB, checked against the bytes actually received
       .withMaxTotalSize(20480) // in KB, all images together
-      .withConcurrency(2) // downloads at the same time
+      .withConcurrency(1) // downloads at the same time
       .withMaxDimensions(1200, 1200) // resize to fit, needs sharp
       .withCompression(60, true) // 60% quality, convert to webp, needs sharp
       .withTimeout(10_000, 30_000) // headers and body timeouts, in ms
@@ -298,7 +298,7 @@ apply by default when `saveImages` is on:
 | --------------------------- | --------------------------- | --------------- |
 | Size of one image           | `saveImages.maxSizeKb`      | `10240` (10 MB) |
 | Size of all images together | `saveImages.maxTotalSizeKb` | `51200` (50 MB) |
-| Downloads running at once   | `saveImages.concurrency`    | `4`             |
+| Downloads running at once   | `saveImages.concurrency`    | `2`             |
 
 Voice messages have their own pair: `saveVoiceMessages.maxSizeKb` (default `25600`) and
 `saveVoiceMessages.maxTotalSizeKb` (default `51200`).
@@ -312,7 +312,7 @@ it is embedded:
 
 ```js
 await createTranscript(channel, {
-  saveImages: { maxTotalSizeKb: 10240, maxSizeKb: 2048, concurrency: 2, sharpCache: false },
+  saveImages: { maxTotalSizeKb: 10240, maxSizeKb: 2048, concurrency: 1, sharpCache: false },
 });
 ```
 

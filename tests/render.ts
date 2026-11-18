@@ -819,6 +819,7 @@ async function main() {
   check('an object enables it', custom.images.enabled, true);
   check('an object overrides its fields', `${custom.images.maxSizeKb}/${custom.images.quality}`, '512/60');
   check('an object keeps the other defaults', custom.images.maxWidth, 800);
+  check('two images at a time by default', on.images.concurrency, 2);
   check('webp off by default', on.images.webp, false);
   check('sharp cache kept by default', on.images.sharpCache, true);
   const webpNoCache = resolveFeatures({ saveImages: { webp: true, sharpCache: false } }).images;

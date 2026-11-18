@@ -40,8 +40,12 @@ export type WebpCompressionOptions = Partial<{
 /** Default cap for a single image, in kilobytes. */
 const DEFAULT_MAX_SIZE_KB = 10240;
 
-/** Default number of images downloaded and processed at the same time. */
-const DEFAULT_CONCURRENCY = 4;
+/**
+ * Default number of images downloaded and processed at the same time. Kept low
+ * because each one in flight holds its decoded pixels, and on glibc the peak
+ * stays in the process after the transcript is done.
+ */
+const DEFAULT_CONCURRENCY = 2;
 
 /** Builds an image saving callback, with optional resizing and compression. */
 export class TranscriptImageDownloader {
@@ -94,7 +98,7 @@ export class TranscriptImageDownloader {
   /**
    * Sets how many images are downloaded and processed at the same time. The
    * others wait, so their buffers are not all in memory at once.
-   * @param concurrency Zero or less means no limit (default 4)
+   * @param concurrency Zero or less means no limit (default 2)
    */
   withConcurrency(concurrency: number) {
     this.concurrency = concurrency;

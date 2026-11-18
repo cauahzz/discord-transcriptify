@@ -38,7 +38,7 @@ export function resolveFeatures(options: FeatureOptions = {}): ResolvedFeatures 
     images: normalize(options.saveImages, {
       maxSizeKb: 10240,
       maxTotalSizeKb: 51200,
-      concurrency: 4,
+      concurrency: 2,
       quality: 75,
       maxWidth: 800,
       maxHeight: 800,

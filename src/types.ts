@@ -30,7 +30,7 @@ export type SaveImagesOptions = Partial<{
    * @default 51200
    */
   maxTotalSizeKb: number;
-  /** How many images are downloaded and processed at the same time. Zero or less means no limit. @default 4 */
+  /** How many images are downloaded and processed at the same time. Zero or less means no limit. @default 2 */
   concurrency: number;
   /** Compression quality of JPEG and WebP images, 1-100. PNG images stay lossless. @default 75 */
   quality: number;
