@@ -805,6 +805,37 @@ async function main() {
   check('long names cut', sanitizeFilename('x'.repeat(300)).length, 100);
   check('nothing usable left', sanitizeFilename('///'), '');
 
+  console.log('\n== return types ==');
+  // one message object for every call, so the pages can only differ by how they are returned
+  const samePage = [message({ content: 'página com acentuação ✓' })];
+  const returned = <T extends ExportReturnType>(returnType: T, hydrate = false) =>
+    generateFromMessages(samePage, channel, {
+      returnType,
+      hydrate,
+      callbacks: { resolveChannel: () => null, resolveUser: () => null, resolveRole: () => null },
+    });
+  // markdown splits the text with comments; a byte cut in the wrong place would show up as mojibake here
+  const readsBack = (page: string) => page.replace(/<!--[^>]*-->/g, '').includes('página com acentuação ✓');
+  const asString = await returned(ExportReturnType.String);
+  check('the string keeps characters outside ASCII', readsBack(asString), true);
+  check(
+    'the buffer holds the same page as the string',
+    (await returned(ExportReturnType.Buffer)).toString('utf8') === asString,
+    true
+  );
+  check(
+    'and so does the attachment',
+    ((await returned(ExportReturnType.Attachment)).attachment as Buffer).toString('utf8') === asString,
+    true
+  );
+  // the hydrated page carries a random build id, so it is checked for its text and not compared
+  check('a hydrated string reads back', readsBack(await returned(ExportReturnType.String, true)), true);
+  check(
+    'a hydrated buffer reads back',
+    readsBack((await returned(ExportReturnType.Buffer, true)).toString('utf8')),
+    true
+  );
+
   console.log('\n== features ==');
   const off = resolveFeatures({});
   check('saveImages off by default', off.images.enabled, false);

@@ -11,6 +11,8 @@ All notable changes to this project are listed here. The format follows
 - `saveImages` downloads and processes two images at a time instead of four, which lowers the memory
   peak of a transcript with many images. `TranscriptImageDownloader` has the same new default. Pass
   `concurrency: 4` or `.withConcurrency(4)` to keep the old pace.
+- `returnType: 'buffer'` and `'attachment'` no longer turn the page into a string and back, which kept
+  two extra copies of it in memory. The file is byte for byte the same.
 
 ## [1.1.0] - 2026-10-16
 

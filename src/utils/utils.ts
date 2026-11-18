@@ -38,14 +38,14 @@ export function parseDiscordEmoji(emoji: Emoji | APIMessageComponentEmoji) {
   return `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/${codepoints}.svg`;
 }
 
-/** Reads a stream to the end and returns its content as a UTF-8 string. */
-export function streamToString(stream: NodeJS.ReadableStream) {
+/** Reads a stream to the end and returns its content in a single buffer. */
+export function streamToBuffer(stream: NodeJS.ReadableStream) {
   const chunks: Buffer[] = [];
 
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<Buffer>((resolve, reject) => {
     stream.on('data', (chunk) => chunks.push(chunk));
     stream.on('error', reject);
-    stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    stream.on('end', () => resolve(Buffer.concat(chunks)));
   });
 }
 

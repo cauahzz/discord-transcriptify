@@ -90,15 +90,17 @@ export async function generateFromMessages<T extends ExportReturnType = ExportRe
     hydrate: options.hydrate ?? false,
   });
 
-  if (options.returnType === ExportReturnType.Buffer) {
-    return Buffer.from(html) as unknown as ObjectType<T>;
-  }
-
   if (options.returnType === ExportReturnType.String) {
-    return html as unknown as ObjectType<T>;
+    return (typeof html === 'string' ? html : html.toString('utf8')) as unknown as ObjectType<T>;
   }
 
-  return new AttachmentBuilder(Buffer.from(html), {
+  const file = typeof html === 'string' ? Buffer.from(html) : html;
+
+  if (options.returnType === ExportReturnType.Buffer) {
+    return file as unknown as ObjectType<T>;
+  }
+
+  return new AttachmentBuilder(file, {
     name: options.filename ?? getDefaultFilename(channel),
   }) as unknown as ObjectType<T>;
 }

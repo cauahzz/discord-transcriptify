@@ -17,7 +17,7 @@ import path from 'path';
 import { renderToString } from '@derockdev/discord-components-core/hydrate';
 import DiscordMessages from './transcript';
 import type { ResolveImageCallback } from '../downloader/images';
-import { serializeForScript, streamToString } from '../utils/utils';
+import { serializeForScript, streamToBuffer } from '../utils/utils';
 import { activeFeatures, type ResolvedFeatures } from '../features';
 
 // version of the component library the page loads from the CDN
@@ -53,7 +53,13 @@ export type RenderMessageContext = {
   filtered?: boolean;
 };
 
-export default async function render({ messages, channel, callbacks, ...options }: RenderMessageContext) {
+/** Renders the page: a Buffer, or a string when it is hydrated, since that is the form each path produces. */
+export default async function render({
+  messages,
+  channel,
+  callbacks,
+  ...options
+}: RenderMessageContext): Promise<Buffer | string> {
   const profiles = buildProfiles(messages, options.features.threadMessages.enabled ? options.threads : undefined, {
     serverTags: options.features.uiServerTags.enabled,
   });
@@ -123,19 +129,17 @@ export default async function render({ messages, channel, callbacks, ...options 
     </html>
   );
 
-  const markup = await streamToString(prelude);
+  // kept as bytes: the page holds every embedded image, and a caller that wants a Buffer
+  // would otherwise pay for a string copy and then a second Buffer copy of all of it
+  if (!options.hydrate) return streamToBuffer(prelude);
 
-  if (options.hydrate) {
-    const result = await renderToString(markup, {
-      beforeHydrate: async (document) => {
-        document.defaultView.$discordMessage = {
-          profiles: await profiles,
-        };
-      },
-    });
+  const result = await renderToString((await streamToBuffer(prelude)).toString('utf8'), {
+    beforeHydrate: async (document) => {
+      document.defaultView.$discordMessage = {
+        profiles: await profiles,
+      };
+    },
+  });
 
-    return result.html;
-  }
-
-  return markup;
+  return result.html;
 }
