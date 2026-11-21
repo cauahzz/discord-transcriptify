@@ -2740,6 +2740,113 @@ async function main() {
   (guild.members as any).fetch = originalFetch;
   /* eslint-enable @typescript-eslint/no-explicit-any */
 
+  console.log('\n== interactionMetadata, reply fallback and system messages ==');
+  const interactionAuthor = {
+    id: '888',
+    username: 'invoker',
+    discriminator: '0',
+    global_name: 'Invoker',
+    avatar: null,
+  };
+  const replyUser = { id: '889', username: 'replied', discriminator: '0', global_name: 'RepliedUser', avatar: null };
+  const extraMessages = await render([
+    message({
+      content: 'slash response',
+      interaction_metadata: {
+        id: '700',
+        type: 2,
+        user: interactionAuthor,
+        authorizing_integration_owners: {},
+      },
+    }),
+    message({
+      content: 'missing target reply',
+      type: 19,
+      message_reference: { type: 0, message_id: '99999', channel_id: CHANNEL_ID, guild_id: GUILD_ID },
+      referenced_message: {
+        id: '99999',
+        channel_id: CHANNEL_ID,
+        guild_id: GUILD_ID,
+        author: replyUser,
+        content: 'outside window',
+        timestamp: new Date(0).toISOString(),
+        edited_timestamp: null,
+        tts: false,
+        mention_everyone: false,
+        mentions: [],
+        mention_roles: [],
+        attachments: [],
+        embeds: [],
+        pinned: false,
+        type: 0,
+        flags: 0,
+      },
+    }),
+    message({ type: 4, content: 'vip-support' }),
+    message({ type: 5 }),
+    message({ type: 12, content: 'announcements' }),
+    message({
+      type: 24,
+      embeds: [{ fields: [{ name: 'rule_name', value: 'Block Invites' }] }],
+    }),
+    message({
+      id: SnowflakeUtil.generate({ timestamp: 0 }).toString(),
+      type: 3,
+      call: { participants: ['1', '2'], ended_timestamp: new Date(65_000).toISOString() },
+    }),
+    message({
+      id: SnowflakeUtil.generate({ timestamp: 0 }).toString(),
+      type: 3,
+      call: { participants: ['1'], ended_timestamp: new Date(10_000).toISOString() },
+    }),
+    message({
+      type: 25,
+      role_subscription_data: {
+        role_subscription_listing_id: '1',
+        tier_name: 'Gold Supporter',
+        total_months_subscribed: 3,
+        is_renewal: false,
+      },
+    }),
+    message({ type: 27, content: 'Town Hall' }),
+  ]);
+  check(
+    'interactionMetadata renders command header and adds user to profiles',
+    extraMessages.includes('profile="888"') &&
+      extraMessages.includes('command="a command"') &&
+      profileOf(extraMessages, '888') !== undefined,
+    true
+  );
+  check(
+    'missing reply fallback preserves repliedUser author while keeping message notice',
+    extraMessages.includes('author="RepliedUser"') && extraMessages.includes('Message could not be loaded.'),
+    true
+  );
+  check(
+    'channel name change renders edit system message',
+    extraMessages.includes('type="edit"') && extraMessages.includes('changed the channel name:'),
+    true
+  );
+  check('channel icon change renders', extraMessages.includes('changed the channel icon.'), true);
+  check('channel follow add renders', extraMessages.includes('has added <strong>announcements</strong>'), true);
+  check(
+    'automod action renders alert system message with rule name',
+    extraMessages.includes('type="alert"') && extraMessages.includes('Block Invites'),
+    true
+  );
+  check(
+    'call system message renders with duration',
+    extraMessages.replace(/<!-- -->/g, '').includes('started a call that lasted 1:05.'),
+    true
+  );
+  check('missed call system message uses missed-call type', extraMessages.includes('type="missed-call"'), true);
+  check(
+    'role subscription purchase renders tier and months',
+    extraMessages.includes('Gold Supporter') && extraMessages.includes('3 months'),
+    true
+  );
+  check('stage start renders', extraMessages.includes('started <strong>Town Hall</strong>'), true);
+
   await client.destroy();
 
   console.log(`\n${failures === 0 ? 'ALL PASSED' : failures + ' FAILURE(S)'}`);

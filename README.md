@@ -105,7 +105,8 @@ push.
   the thread.
 - **Stickers**: PNG, APNG and GIF as images. Lottie stickers show a placeholder with the sticker
   name, since they need a player script.
-- **System messages**: joins, pins, boosts and thread creation.
+- **System messages**: joins, group adds/removals, calls, pins, boosts, channel updates, thread
+  creation, AutoMod alerts, stage events, role subscriptions and incident alerts.
 - **Server tags and role icons** next to author names.
 
 ![A Components V2 container with a section, a thumbnail, a media gallery and buttons, followed by a voice message, a file card and a thread preview](./.github/assets/components.png)

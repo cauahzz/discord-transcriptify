@@ -8,7 +8,7 @@ import {
   DiscordThreadMessage,
   DiscordTime,
 } from '../discordComponents';
-import { MessageFlags, MessageReferenceType, type Message as MessageType } from 'discord.js';
+import { InteractionType, MessageFlags, MessageReferenceType, type Message as MessageType } from 'discord.js';
 import React from 'react';
 import type { RenderMessageContext } from '..';
 import { displayName } from '../../utils/buildProfiles';
@@ -128,13 +128,21 @@ export default async function DiscordMessage({
     >
       <MessageReply message={message} context={context} />
 
-      {message.interaction && (
+      {message.interaction ? (
         <DiscordCommand
           slot="reply"
           profile={message.interaction.user.id}
           command={'/' + message.interaction.commandName}
         />
-      )}
+      ) : message.interactionMetadata && !message.reference ? (
+        <DiscordCommand
+          slot="reply"
+          profile={message.interactionMetadata.user.id}
+          command={
+            message.interactionMetadata.type === InteractionType.ApplicationCommand ? 'a command' : 'an interaction'
+          }
+        />
+      ) : null}
 
       {forwarded ? (
         <div className="discord-forwarded">

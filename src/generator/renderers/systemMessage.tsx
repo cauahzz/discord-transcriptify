@@ -6,10 +6,73 @@ import { displayName, roleColor } from '../../utils/buildProfiles';
 import MessageContent, { RenderType } from './content';
 import { parseDiscordEmoji } from '../../utils/utils';
 import { ThreadMessages } from './threadMessages';
+import { formatDuration } from './voice';
+
+function AuthorHighlight({ message }: { message: Message }) {
+  return (
+    <Highlight color={message.member?.roles.color?.hexColor}>
+      {message.author.displayName ?? message.author.username}
+    </Highlight>
+  );
+}
+
+function MentionedTarget({ message }: { message: Message }) {
+  const target = message.mentions.users.first();
+  if (!target) return null;
+  const member = message.guild?.members.cache.get(target.id) ?? null;
+  return <Highlight color={roleColor(member)}>{displayName(member, target)}</Highlight>;
+}
 
 export default async function SystemMessage({ message, context }: { message: Message; context: RenderMessageContext }) {
   switch (message.type) {
     case MessageType.RecipientAdd:
+      if (message.channel.isDMBased()) {
+        const target = message.mentions.users.first();
+        return (
+          <DiscordSystemMessage
+            id={`m-${message.id}`}
+            key={message.id}
+            timestamp={message.createdAt.toISOString()}
+            type="join"
+          >
+            <AuthorHighlight message={message} /> added {target ? <MentionedTarget message={message} /> : 'someone'} to
+            the group.
+          </DiscordSystemMessage>
+        );
+      }
+      return (
+        <DiscordSystemMessage
+          id={`m-${message.id}`}
+          key={message.id}
+          timestamp={message.createdAt.toISOString()}
+          type="join"
+        >
+          <JoinMessage member={message.member} fallbackUser={message.author} timestamp={message.createdTimestamp} />
+        </DiscordSystemMessage>
+      );
+
+    case MessageType.RecipientRemove: {
+      const target = message.mentions.users.first();
+      const leftSelf = !target || target.id === message.author.id;
+      return (
+        <DiscordSystemMessage
+          id={`m-${message.id}`}
+          key={message.id}
+          timestamp={message.createdAt.toISOString()}
+          type="leave"
+        >
+          <AuthorHighlight message={message} />{' '}
+          {leftSelf ? (
+            'left the group.'
+          ) : (
+            <>
+              removed <MentionedTarget message={message} /> from the group.
+            </>
+          )}
+        </DiscordSystemMessage>
+      );
+    }
+
     case MessageType.UserJoin:
       return (
         <DiscordSystemMessage
@@ -22,6 +85,64 @@ export default async function SystemMessage({ message, context }: { message: Mes
         </DiscordSystemMessage>
       );
 
+    case MessageType.Call: {
+      const call = message.call;
+      const ended = call?.endedTimestamp;
+      const participants = call?.participants ?? [];
+      const missed = ended !== null && ended !== undefined && participants.length <= 1;
+      const durationSecs = ended ? Math.max(0, Math.round((ended - message.createdTimestamp) / 1000)) : null;
+
+      return (
+        <DiscordSystemMessage
+          id={`m-${message.id}`}
+          key={message.id}
+          timestamp={message.createdAt.toISOString()}
+          type={missed ? 'missed-call' : 'call'}
+        >
+          <AuthorHighlight message={message} /> started a call
+          {durationSecs !== null ? ` that lasted ${formatDuration(durationSecs)}.` : '.'}
+        </DiscordSystemMessage>
+      );
+    }
+
+    case MessageType.ChannelNameChange:
+      return (
+        <DiscordSystemMessage
+          id={`m-${message.id}`}
+          key={message.id}
+          timestamp={message.createdAt.toISOString()}
+          type="edit"
+          channelName
+        >
+          <AuthorHighlight message={message} /> changed the channel name: <strong>{message.content}</strong>
+        </DiscordSystemMessage>
+      );
+
+    case MessageType.ChannelIconChange:
+      return (
+        <DiscordSystemMessage
+          id={`m-${message.id}`}
+          key={message.id}
+          timestamp={message.createdAt.toISOString()}
+          type="edit"
+        >
+          <AuthorHighlight message={message} /> changed the channel icon.
+        </DiscordSystemMessage>
+      );
+
+    case MessageType.ChannelFollowAdd:
+      return (
+        <DiscordSystemMessage
+          id={`m-${message.id}`}
+          key={message.id}
+          timestamp={message.createdAt.toISOString()}
+          type="join"
+        >
+          <AuthorHighlight message={message} /> has added <strong>{message.content}</strong> to this channel. Its most
+          important updates will show up here.
+        </DiscordSystemMessage>
+      );
+
     case MessageType.ChannelPinnedMessage:
       return (
         <DiscordSystemMessage
@@ -30,10 +151,8 @@ export default async function SystemMessage({ message, context }: { message: Mes
           timestamp={message.createdAt.toISOString()}
           type="pin"
         >
-          <Highlight color={message.member?.roles.color?.hexColor}>
-            {message.author.displayName ?? message.author.username}
-          </Highlight>{' '}
-          pinned <i data-goto={message.reference?.messageId}>a message</i> to this channel.
+          <AuthorHighlight message={message} /> pinned <i data-goto={message.reference?.messageId}>a message</i> to this
+          channel.
           {message.reactions.cache.size > 0 && (
             <DiscordReactions slot="reactions">
               {message.reactions.cache.map((reaction, id) => (
@@ -60,10 +179,7 @@ export default async function SystemMessage({ message, context }: { message: Mes
           timestamp={message.createdAt.toISOString()}
           type="boost"
         >
-          <Highlight color={message.member?.roles.color?.hexColor}>
-            {message.author.displayName ?? message.author.username}
-          </Highlight>{' '}
-          boosted the server!
+          <AuthorHighlight message={message} /> boosted the server!
         </DiscordSystemMessage>
       );
 
@@ -75,10 +191,8 @@ export default async function SystemMessage({ message, context }: { message: Mes
           timestamp={message.createdAt.toISOString()}
           type="thread"
         >
-          <Highlight color={message.member?.roles.color?.hexColor}>
-            {message.author.displayName ?? message.author.username}
-          </Highlight>{' '}
-          started a thread: <strong>{message.content}</strong>. See all <strong>threads</strong>.
+          <AuthorHighlight message={message} /> started a thread: <strong>{message.content}</strong>. See all{' '}
+          <strong>threads</strong>.
           <ThreadPreviewBox message={message} context={context} />
         </DiscordSystemMessage>
       );
@@ -91,10 +205,156 @@ export default async function SystemMessage({ message, context }: { message: Mes
           timestamp={message.createdAt.toISOString()}
           type="thread"
         >
-          <Highlight color={message.member?.roles.color?.hexColor}>
-            {message.author.displayName ?? message.author.username}
-          </Highlight>{' '}
-          started a thread: <i data-goto={message.reference?.messageId}>{message.content}</i>
+          <AuthorHighlight message={message} /> started a thread:{' '}
+          <i data-goto={message.reference?.messageId}>{message.content}</i>
+        </DiscordSystemMessage>
+      );
+
+    case MessageType.AutoModerationAction: {
+      const embed = message.embeds[0];
+      const fields = new Map((embed?.fields ?? []).map((field) => [field.name, field.value] as const));
+      const ruleName = fields.get('rule_name');
+      return (
+        <DiscordSystemMessage
+          id={`m-${message.id}`}
+          key={message.id}
+          timestamp={message.createdAt.toISOString()}
+          type="alert"
+        >
+          AutoMod flagged a message from <AuthorHighlight message={message} />
+          {ruleName && (
+            <>
+              {' '}
+              for rule <strong>{ruleName}</strong>
+            </>
+          )}
+          .
+        </DiscordSystemMessage>
+      );
+    }
+
+    case MessageType.RoleSubscriptionPurchase: {
+      const sub = message.roleSubscriptionData;
+      return (
+        <DiscordSystemMessage
+          id={`m-${message.id}`}
+          key={message.id}
+          timestamp={message.createdAt.toISOString()}
+          type="boost"
+        >
+          <AuthorHighlight message={message} /> {sub?.isRenewal ? 'renewed' : 'subscribed to'}{' '}
+          {sub?.tierName ? <strong>{sub.tierName}</strong> : 'a server subscription'}
+          {sub && sub.totalMonthsSubscribed > 1 ? ` for ${sub.totalMonthsSubscribed} months` : ''}.
+        </DiscordSystemMessage>
+      );
+    }
+
+    case MessageType.StageStart:
+      return (
+        <DiscordSystemMessage
+          id={`m-${message.id}`}
+          key={message.id}
+          timestamp={message.createdAt.toISOString()}
+          type="thread"
+        >
+          <AuthorHighlight message={message} /> started <strong>{message.content || 'a Stage'}</strong>.
+        </DiscordSystemMessage>
+      );
+
+    case MessageType.StageEnd:
+      return (
+        <DiscordSystemMessage
+          id={`m-${message.id}`}
+          key={message.id}
+          timestamp={message.createdAt.toISOString()}
+          type="thread"
+        >
+          <AuthorHighlight message={message} /> ended <strong>{message.content || 'the Stage'}</strong>.
+        </DiscordSystemMessage>
+      );
+
+    case MessageType.StageSpeaker:
+      return (
+        <DiscordSystemMessage
+          id={`m-${message.id}`}
+          key={message.id}
+          timestamp={message.createdAt.toISOString()}
+          type="thread"
+        >
+          <AuthorHighlight message={message} /> is now a speaker.
+        </DiscordSystemMessage>
+      );
+
+    case MessageType.StageTopic:
+      return (
+        <DiscordSystemMessage
+          id={`m-${message.id}`}
+          key={message.id}
+          timestamp={message.createdAt.toISOString()}
+          type="edit"
+        >
+          <AuthorHighlight message={message} /> changed the Stage topic: <strong>{message.content}</strong>
+        </DiscordSystemMessage>
+      );
+
+    case MessageType.GuildApplicationPremiumSubscription:
+      return (
+        <DiscordSystemMessage
+          id={`m-${message.id}`}
+          key={message.id}
+          timestamp={message.createdAt.toISOString()}
+          type="boost"
+        >
+          <AuthorHighlight message={message} /> upgraded <strong>{message.content || 'an application'}</strong> with
+          Server Boosts!
+        </DiscordSystemMessage>
+      );
+
+    case MessageType.GuildIncidentAlertModeEnabled:
+      return (
+        <DiscordSystemMessage
+          id={`m-${message.id}`}
+          key={message.id}
+          timestamp={message.createdAt.toISOString()}
+          type="alert"
+        >
+          <AuthorHighlight message={message} /> enabled security actions.
+        </DiscordSystemMessage>
+      );
+
+    case MessageType.GuildIncidentAlertModeDisabled:
+      return (
+        <DiscordSystemMessage
+          id={`m-${message.id}`}
+          key={message.id}
+          timestamp={message.createdAt.toISOString()}
+          type="alert"
+        >
+          <AuthorHighlight message={message} /> disabled security actions.
+        </DiscordSystemMessage>
+      );
+
+    case MessageType.GuildIncidentReportRaid:
+      return (
+        <DiscordSystemMessage
+          id={`m-${message.id}`}
+          key={message.id}
+          timestamp={message.createdAt.toISOString()}
+          type="alert"
+        >
+          <AuthorHighlight message={message} /> reported a raid.
+        </DiscordSystemMessage>
+      );
+
+    case MessageType.GuildIncidentReportFalseAlarm:
+      return (
+        <DiscordSystemMessage
+          id={`m-${message.id}`}
+          key={message.id}
+          timestamp={message.createdAt.toISOString()}
+          type="alert"
+        >
+          <AuthorHighlight message={message} /> marked the raid alert as a false alarm.
         </DiscordSystemMessage>
       );
 
@@ -112,9 +372,7 @@ export default async function SystemMessage({ message, context }: { message: Mes
           timestamp={message.createdAt.toISOString()}
           type="thread"
         >
-          <Highlight color={message.member?.roles.color?.hexColor}>
-            {message.author.displayName ?? message.author.username}
-          </Highlight>
+          <AuthorHighlight message={message} />
           {"'s poll "}
           {question && <strong>{question}</strong>}
           {question && ' '}
@@ -133,11 +391,6 @@ export default async function SystemMessage({ message, context }: { message: Mes
 
     // these types have no rendering of their own
     case MessageType.Default:
-    case MessageType.RecipientRemove:
-    case MessageType.Call:
-    case MessageType.ChannelNameChange:
-    case MessageType.ChannelIconChange:
-    case MessageType.ChannelFollowAdd:
     case MessageType.GuildDiscoveryDisqualified:
     case MessageType.GuildDiscoveryRequalified:
     case MessageType.GuildDiscoveryGracePeriodInitialWarning:
@@ -146,19 +399,8 @@ export default async function SystemMessage({ message, context }: { message: Mes
     case MessageType.ChatInputCommand:
     case MessageType.GuildInviteReminder:
     case MessageType.ContextMenuCommand:
-    case MessageType.AutoModerationAction:
-    case MessageType.RoleSubscriptionPurchase:
     case MessageType.InteractionPremiumUpsell:
-    case MessageType.StageStart:
-    case MessageType.StageEnd:
-    case MessageType.StageSpeaker:
     case MessageType.StageRaiseHand:
-    case MessageType.StageTopic:
-    case MessageType.GuildApplicationPremiumSubscription:
-    case MessageType.GuildIncidentAlertModeEnabled:
-    case MessageType.GuildIncidentAlertModeDisabled:
-    case MessageType.GuildIncidentReportRaid:
-    case MessageType.GuildIncidentReportFalseAlarm:
     case MessageType.PurchaseNotification:
       return undefined;
 
