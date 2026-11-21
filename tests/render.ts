@@ -2740,6 +2740,20 @@ async function main() {
   (guild.members as any).fetch = originalFetch;
   /* eslint-enable @typescript-eslint/no-explicit-any */
 
+  console.log('\n== section thumbnail image preview ==');
+  const thumbPreviewScript = uiImagePreviewFeature.clientScript?.(resolveFeatures({})) ?? '';
+  check('image preview selector includes section thumbnails', thumbPreviewScript.includes('.discord-thumbnail'), true);
+  const thumbDom = dom(
+    '<discord-messages><img class="discord-thumbnail" src="https://example.com/thumb.png" alt="Thumb" /><discord-spoiler class="discord-spoiler"><img class="discord-thumbnail" src="https://example.com/secret.png" alt="Secret" /></discord-spoiler></discord-messages>'
+  );
+  thumbDom.run(thumbPreviewScript);
+  const thumbs = thumbDom.all('.discord-thumbnail');
+  const previewOverlay = thumbDom.one('.discord-image-preview-overlay');
+  thumbDom.fire(thumbs[1], 'click', clickInit);
+  check('spoiled section thumbnail stays closed', previewOverlay.classList.contains('is-open'), false);
+  thumbDom.fire(thumbs[0], 'click', clickInit);
+  check('clicking a section thumbnail opens the preview', previewOverlay.classList.contains('is-open'), true);
+
   await client.destroy();
 
   console.log(`\n${failures === 0 ? 'ALL PASSED' : failures + ' FAILURE(S)'}`);
