@@ -8,16 +8,37 @@ interface DiscordButtonProps {
   children: React.ReactNode;
 }
 
+const SAFE_BUTTON_PROTOCOLS = new Set(['http:', 'https:', 'discord:']);
+
+function safeButtonUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    return SAFE_BUTTON_PROTOCOLS.has(new URL(url).protocol) ? url : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function DiscordButton({ type, url, emoji, disabled, children }: DiscordButtonProps) {
   // a link button that is disabled is not clickable either, so it drops the anchor
-  const href = url && !disabled ? url : undefined;
-  const className = `discord-button discord-button-${type}${disabled ? ' discord-button-disabled' : ''}`;
+  const safeUrl = safeButtonUrl(url);
+  const href = safeUrl && !disabled ? safeUrl : undefined;
+  const buttonType = type || 'secondary';
+  const className = `discord-button discord-button-${buttonType}${disabled ? ' discord-button-disabled' : ''}`;
+  const isPremium = buttonType === 'premium';
 
   const content = (
     <>
       <span className="discord-button-content">
+        {isPremium && !emoji && (
+          <span className="discord-button-premium-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM4.24 4.75a1 1 0 0 0-1.98.3l1.39 7.42A3 3 0 0 0 6.6 15h10.8a3 3 0 0 0 2.94-2.41l1.15-5.75A1 1 0 0 0 20.51 5.6H6.1L5.85 4.3A1 1 0 0 0 4.24 4.75Z" />
+            </svg>
+          </span>
+        )}
         {emoji && <img src={emoji} alt="" className="discord-button-emoji" draggable={false} />}
-        <span className="discord-button-label">{children}</span>
+        <span className="discord-button-label">{children ?? (isPremium ? 'Shop' : null)}</span>
       </span>
       {url && (
         <span className="discord-button-launch" aria-hidden="true">

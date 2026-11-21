@@ -1,11 +1,12 @@
 import React from 'react';
 
 interface DiscordCheckboxProps {
-  label: string;
+  label?: string;
+  description?: string;
   checked: boolean;
 }
 
-function DiscordCheckbox({ label, checked }: DiscordCheckboxProps) {
+function DiscordCheckbox({ label, description, checked }: DiscordCheckboxProps) {
   return (
     <div
       className="discord-checkbox"
@@ -40,7 +41,14 @@ function DiscordCheckbox({ label, checked }: DiscordCheckboxProps) {
           </svg>
         )}
       </div>
-      <span style={{ lineHeight: '1.25' }}>{label}</span>
+      {(label || description) && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          {label && <span style={{ lineHeight: '1.25' }}>{label}</span>}
+          {description && (
+            <span style={{ fontSize: '12px', color: 'var(--dt-text-muted)', lineHeight: '1.25' }}>{description}</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

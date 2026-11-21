@@ -71,7 +71,14 @@ export default function ComponentRow({
           <DiscordActionRow>
             <>
               {(component.components ?? []).map((nestedComponent, id) => (
-                <Component component={nestedComponent} id={id} key={id} attachments={attachments} />
+                <Component
+                  component={nestedComponent}
+                  id={id}
+                  key={id}
+                  attachments={attachments}
+                  context={context}
+                  message={message}
+                />
               ))}
             </>
           </DiscordActionRow>
@@ -161,7 +168,16 @@ export default function ComponentRow({
       );
 
     default:
-      return null;
+      return (
+        <Component
+          component={component as { type: number }}
+          id={id}
+          key={id}
+          attachments={attachments}
+          context={context}
+          message={message}
+        />
+      );
   }
 }
 
@@ -184,7 +200,7 @@ export async function Component({
       return (
         <DiscordButton
           key={id}
-          type={ButtonStyleMapping[(component as any).style as keyof typeof ButtonStyleMapping]}
+          type={ButtonStyleMapping[(component as any).style as keyof typeof ButtonStyleMapping] ?? 'secondary'}
           url={(component as any).url ?? undefined}
           disabled={!!(component as any).disabled}
           emoji={(component as any).emoji ? parseDiscordEmoji((component as any).emoji) : undefined}
@@ -198,7 +214,7 @@ export async function Component({
     case ComponentType.RoleSelect:
     case ComponentType.MentionableSelect:
     case ComponentType.ChannelSelect:
-      return <DiscordSelectMenu key={id} component={component as any} />;
+      return <DiscordSelectMenu key={id} component={component as any} context={context} />;
 
     case ComponentType.Thumbnail: {
       const mediaUrl = resolveMediaUrl((component as any).media.url, attachments ?? new Map());
@@ -217,21 +233,76 @@ export async function Component({
       );
     }
 
-    case ComponentType.Checkbox:
-      return <DiscordCheckbox key={id} label={(component as any).label} checked={(component as any).value} />;
-
-    case ComponentType.RadioGroup:
+    case ComponentType.Checkbox: {
+      const data = (component as any).data ?? component;
       return (
-        <DiscordRadioGroup
+        <DiscordCheckbox
           key={id}
-          options={(component as any).options.map((opt: any) => ({
-            label: opt.label,
-            value: opt.value,
-            description: opt.description ?? undefined,
-          }))}
-          defaultValues={(component as any).defaultValues}
+          label={data.label ?? (component as any).label ?? undefined}
+          checked={Boolean(data.default ?? data.value ?? (component as any).value)}
         />
       );
+    }
+
+    case ComponentType.CheckboxGroup: {
+      const data = (component as any).data ?? component;
+      const selected = new Set<string>(data.default_values ?? (component as any).defaultValues ?? []);
+      return (
+        <div
+          key={id}
+          className="discord-checkbox-group"
+          style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '4px 0' }}
+        >
+          {(data.options ?? (component as any).options ?? []).map((opt: any, idx: number) => (
+            <DiscordCheckbox
+              key={idx}
+              label={opt.label}
+              description={opt.description ?? undefined}
+              checked={Boolean(opt.default || selected.has(opt.value))}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    case ComponentType.RadioGroup: {
+      const data = (component as any).data ?? component;
+      const rawOptions = data.options ?? (component as any).options ?? [];
+      const options = rawOptions.map((opt: any) => ({
+        label: opt.label,
+        value: opt.value,
+        description: opt.description ?? undefined,
+      }));
+      const defaultValues =
+        data.default_values ??
+        (component as any).defaultValues ??
+        rawOptions.filter((opt: any) => opt.default).map((opt: any) => opt.value);
+      return <DiscordRadioGroup key={id} options={options} defaultValues={defaultValues} />;
+    }
+
+    case ComponentType.Label: {
+      const data = (component as any).data ?? component;
+      const labelText = (component as any).label ?? data.label;
+      const descriptionText = (component as any).description ?? data.description;
+      const childComponent = (component as any).component ?? data.component;
+      return (
+        <div key={id} className="discord-label" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {labelText && (
+            <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--dt-text-strong)' }}>{labelText}</div>
+          )}
+          {descriptionText && <div style={{ fontSize: '12px', color: 'var(--dt-text-muted)' }}>{descriptionText}</div>}
+          {childComponent && (
+            <Component
+              component={childComponent}
+              id={0}
+              attachments={attachments}
+              context={context}
+              message={message}
+            />
+          )}
+        </div>
+      );
+    }
 
     default:
       return undefined;

@@ -92,9 +92,11 @@ push.
   headers, and consecutive messages from the same author grouped under one header.
 - **Embeds**: every field, including author, footer, thumbnail and image.
 - **Components V2**: container (accent colour, spoiler), text display, section with a thumbnail or
-  button accessory, media gallery, file, separator, checkbox and radio group.
-- **Buttons and select menus**: all styles, link buttons, emoji and the disabled state. A select
-  menu opens on a click and lists its options, with their emoji and descriptions.
+  button accessory, media gallery (images and videos), file, separator, label, checkbox, checkbox group
+  and radio group.
+- **Buttons and select menus**: all styles (including link and premium buttons), emoji and the disabled
+  state. A select menu opens on a click and lists its options (or resolved default values for user,
+  role, mentionable and channel selects), with their emoji and descriptions.
 - **Attachments**: images, videos and audio inline; several images as one grid; any other file as a
   card with its name, size and a download link.
 - **Voice messages**: waveform, duration and a play button.
