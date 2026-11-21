@@ -2740,6 +2740,37 @@ async function main() {
   (guild.members as any).fetch = originalFetch;
   /* eslint-enable @typescript-eslint/no-explicit-any */
 
+  console.log('\n== slash command mentions, guild navigation and safe links ==');
+  const markdownFixes = await render([
+    message({
+      content:
+        '</ping:123456789012345678> and </admin users ban:123456789012345678> in <123456789012345678:customize> <123456789012345678:browse> <123456789012345678:guide> [docs](https://example.com/docs) [xss](javascript:alert(1))',
+    }),
+  ]);
+  check(
+    'slash command mention renders inside discord-mention type="slash"',
+    markdownFixes.includes('<discord-mention type="slash">ping</discord-mention>'),
+    true
+  );
+  check(
+    'subcommand slash mention preserves fullName',
+    markdownFixes.includes('<discord-mention type="slash">admin users ban</discord-mention>'),
+    true
+  );
+  check(
+    'guild navigation tags render their Discord labels',
+    markdownFixes.includes('Channels &amp; Roles</discord-mention>') &&
+      markdownFixes.includes('Browse Channels</discord-mention>') &&
+      markdownFixes.includes('Server Guide</discord-mention>'),
+    true
+  );
+  check(
+    'masked link in normal message opens safely in a new tab',
+    markdownFixes.includes('<a href="https://example.com/docs" target="_blank" rel="noopener noreferrer">docs'),
+    true
+  );
+  check('unsafe javascript: markdown link does not render an anchor', markdownFixes.includes('javascript:'), false);
+
   await client.destroy();
 
   console.log(`\n${failures === 0 ? 'ALL PASSED' : failures + ' FAILURE(S)'}`);

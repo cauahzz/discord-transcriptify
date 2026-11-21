@@ -35,13 +35,22 @@ type RenderContentContext = RenderMessageContext & {
   };
 };
 
+const SAFE_LINK_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'discord:']);
+
+function isSafeLinkTarget(target: unknown): target is string {
+  if (typeof target !== 'string') return false;
+  try {
+    return SAFE_LINK_PROTOCOLS.has(new URL(target).protocol);
+  } catch {
+    return false;
+  }
+}
+
 export default async function MessageContent({ content, context }: { content: string; context: RenderContentContext }) {
   if (context.type === RenderType.REPLY && content.length > 180) content = content.slice(0, 180) + '...';
 
-  const parsed = parse(
-    content,
-    context.type === RenderType.EMBED || context.type === RenderType.WEBHOOK ? 'extended' : 'normal'
-  );
+  // Discord supports masked links in regular messages and Components V2 TextDisplay as well as embeds/webhooks
+  const parsed = parse(content, context.type === RenderType.REPLY ? 'normal' : 'extended');
 
   const isOnlyEmojis = parsed.every(
     (node) => ['emoji', 'twemoji'].includes(node.type) || (node.type === 'text' && node.content.trim().length === 0)
@@ -88,8 +97,11 @@ export async function MessageSingleASTNode({ node, context }: { node: SingleASTN
       return node.content;
 
     case 'link':
+      if (!isSafeLinkTarget(node.target)) {
+        return <MessageASTNodes nodes={node.content} context={context} />;
+      }
       return (
-        <a href={node.target}>
+        <a href={node.target} target="_blank" rel="noopener noreferrer">
           <MessageASTNodes nodes={node.content} context={context} />
         </a>
       );
@@ -157,6 +169,33 @@ export async function MessageSingleASTNode({ node, context }: { node: SingleASTN
           {type}
         </DiscordMention>
       );
+
+    case 'slashCommand':
+      return <DiscordMention type="slash">{String(node.fullName ?? node.name ?? '')}</DiscordMention>;
+
+    case 'guildNavigation': {
+      const labels: Record<string, string> = {
+        customize: 'Channels & Roles',
+        browse: 'Browse Channels',
+        guide: 'Server Guide',
+        'linked-roles': 'Linked Roles',
+      };
+      const navigation = String(node.navigation ?? '');
+      if (navigation === 'linked-roles' && typeof node.roleId === 'string') {
+        const role = await context.callbacks.resolveRole(node.roleId);
+        if (role) {
+          return (
+            <DiscordMention
+              type="role"
+              color={context.type === RenderType.REPLY || role.hexColor === '#000000' ? undefined : role.hexColor}
+            >
+              {role.name}
+            </DiscordMention>
+          );
+        }
+      }
+      return <DiscordMention type="channel">{labels[navigation] ?? navigation}</DiscordMention>;
+    }
 
     case 'codeBlock':
       if (context.type !== RenderType.REPLY) {
