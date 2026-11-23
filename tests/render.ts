@@ -2255,6 +2255,21 @@ async function main() {
     false
   );
 
+  const thumbnailDom = dom(
+    '<body><img class="discord-thumbnail" src="t.png"><discord-spoiler class="discord-spoiler"><img class="discord-thumbnail" src="s.png"></discord-spoiler></body>'
+  );
+  thumbnailDom.run(source(uiImagePreviewFeature));
+  const [thumbnail, spoiledThumbnail] = thumbnailDom.all('.discord-thumbnail');
+  const thumbnailOverlay = thumbnailDom.one('.discord-image-preview-overlay');
+  thumbnailDom.fire(spoiledThumbnail, 'click', clickInit);
+  check(
+    'a section thumbnail in an unrevealed spoiler is refused',
+    thumbnailOverlay.classList.contains('is-open'),
+    false
+  );
+  thumbnailDom.fire(thumbnail, 'click', clickInit);
+  check('a section thumbnail opens', thumbnailOverlay.classList.contains('is-open'), true);
+
   // the voice player
   const voiceMarkup = (n: number) =>
     `<div class="discord-voice-message" id="v${n}"><button type="button" class="discord-voice-play-button"></button><audio controls="" src="a${n}.ogg"></audio></div>`;
@@ -2739,20 +2754,6 @@ async function main() {
   check('fetchMembers is on by default', resolveFeatures({}).members.enabled, true);
   (guild.members as any).fetch = originalFetch;
   /* eslint-enable @typescript-eslint/no-explicit-any */
-
-  console.log('\n== section thumbnail image preview ==');
-  const thumbPreviewScript = uiImagePreviewFeature.clientScript?.(resolveFeatures({})) ?? '';
-  check('image preview selector includes section thumbnails', thumbPreviewScript.includes('.discord-thumbnail'), true);
-  const thumbDom = dom(
-    '<discord-messages><img class="discord-thumbnail" src="https://example.com/thumb.png" alt="Thumb" /><discord-spoiler class="discord-spoiler"><img class="discord-thumbnail" src="https://example.com/secret.png" alt="Secret" /></discord-spoiler></discord-messages>'
-  );
-  thumbDom.run(thumbPreviewScript);
-  const thumbs = thumbDom.all('.discord-thumbnail');
-  const previewOverlay = thumbDom.one('.discord-image-preview-overlay');
-  thumbDom.fire(thumbs[1], 'click', clickInit);
-  check('spoiled section thumbnail stays closed', previewOverlay.classList.contains('is-open'), false);
-  thumbDom.fire(thumbs[0], 'click', clickInit);
-  check('clicking a section thumbnail opens the preview', previewOverlay.classList.contains('is-open'), true);
 
   await client.destroy();
 
