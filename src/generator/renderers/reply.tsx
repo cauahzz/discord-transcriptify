@@ -13,7 +13,23 @@ export default async function MessageReply({ message, context }: { message: Mess
 
   const referencedMessage = context.messages.find((m) => m.id === message.reference!.messageId);
 
-  if (!referencedMessage) return <DiscordReply slot="reply">Message could not be loaded.</DiscordReply>;
+  if (!referencedMessage) {
+    const repliedUser = message.mentions?.repliedUser;
+    if (repliedUser) {
+      return (
+        <DiscordReply
+          slot="reply"
+          author={repliedUser.displayName ?? repliedUser.username}
+          avatar={repliedUser.avatarURL({ size: 32 }) ?? undefined}
+          bot={repliedUser.bot}
+          verified={repliedUser.flags?.has(UserFlags.VerifiedBot)}
+        >
+          <em>Message could not be loaded.</em>
+        </DiscordReply>
+      );
+    }
+    return <DiscordReply slot="reply">Message could not be loaded.</DiscordReply>;
+  }
 
   const isCrossPost = referencedMessage.reference && referencedMessage.reference.guildId !== message.guild?.id;
   const isCommand = referencedMessage.interaction !== null;

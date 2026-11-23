@@ -34,11 +34,9 @@ export async function buildProfiles(
       profiles[author.id] = buildProfile(message.member, author, options);
     }
 
-    if (message.interaction) {
-      const user = message.interaction.user;
-      if (!profiles[user.id]) {
-        profiles[user.id] = buildProfile(null, user, options);
-      }
+    const interactionUser = message.interaction?.user ?? message.interactionMetadata?.user;
+    if (interactionUser && !profiles[interactionUser.id]) {
+      profiles[interactionUser.id] = buildProfile(null, interactionUser, options);
     }
 
     // the preview card under a thread shows its last message
