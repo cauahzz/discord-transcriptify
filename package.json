@@ -60,9 +60,6 @@
   "files": [
     "dist/**/*.js",
     "dist/**/*.d.ts",
-    "dist/**/*.js.map",
-    "src/**/*.ts",
-    "src/**/*.tsx",
     "NOTICE"
   ],
   "devDependencies": {

@@ -6,6 +6,10 @@ All notable changes to this project are listed here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The package ships only the compiled `dist` output, without the TypeScript sources and source maps.
+
 ## [1.1.2] - 2026-11-19
 
 ### Changed
