@@ -316,6 +316,15 @@ async function main() {
     true
   );
 
+  const unparsable = await render([message({ content: 'before </:123456789012345678> after' })]).catch(
+    (error: Error) => error.message
+  );
+  check(
+    'a message the parser throws on is kept as text',
+    unparsable.includes('before &lt;/:123456789012345678&gt; after'),
+    true
+  );
+
   const commands = await render([
     message({
       content:

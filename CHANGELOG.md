@@ -19,6 +19,8 @@ All notable changes to this project are listed here. The format follows
 - Slash command mentions (`</name:id>`) and server navigation links (`<id:customize>`, `browse`,
   `guide`, `linked-roles`) appear in the message instead of being left out.
 - Masked links (`[text](url)`) work in every message, not only in embeds and webhooks.
+- A message the markdown parser fails on, such as one with `</:id>` and no command name, is shown as
+  plain text instead of stopping the whole transcript.
 
 ### Security
 

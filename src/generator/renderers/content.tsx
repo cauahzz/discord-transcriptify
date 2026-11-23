@@ -47,11 +47,20 @@ function isSafeLinkTarget(target: unknown): target is string {
   }
 }
 
+// the parser throws on some input, such as </:id> with no command name, and one message must not stop the export
+function parseOrText(content: string, mode: 'normal' | 'extended'): SingleASTNode[] {
+  try {
+    return parse(content, mode);
+  } catch {
+    return [{ type: 'text', content }];
+  }
+}
+
 export default async function MessageContent({ content, context }: { content: string; context: RenderContentContext }) {
   if (context.type === RenderType.REPLY && content.length > 180) content = content.slice(0, 180) + '...';
 
   // Discord takes masked links in any message now, not only in embeds and webhooks
-  const parsed = parse(content, context.type === RenderType.REPLY ? 'normal' : 'extended');
+  const parsed = parseOrText(content, context.type === RenderType.REPLY ? 'normal' : 'extended');
 
   const isOnlyEmojis = parsed.every(
     (node) => ['emoji', 'twemoji'].includes(node.type) || (node.type === 'text' && node.content.trim().length === 0)
