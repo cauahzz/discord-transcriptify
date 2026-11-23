@@ -35,6 +35,7 @@ type RenderContentContext = RenderMessageContext & {
   };
 };
 
+// the parser keeps a link's target as written, so a javascript: link would run in the page
 const SAFE_LINK_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'discord:']);
 
 function isSafeLinkTarget(target: unknown): target is string {
@@ -49,7 +50,7 @@ function isSafeLinkTarget(target: unknown): target is string {
 export default async function MessageContent({ content, context }: { content: string; context: RenderContentContext }) {
   if (context.type === RenderType.REPLY && content.length > 180) content = content.slice(0, 180) + '...';
 
-  // Discord supports masked links in regular messages and Components V2 TextDisplay as well as embeds/webhooks
+  // Discord takes masked links in any message now, not only in embeds and webhooks
   const parsed = parse(content, context.type === RenderType.REPLY ? 'normal' : 'extended');
 
   const isOnlyEmojis = parsed.every(
@@ -97,19 +98,13 @@ export async function MessageSingleASTNode({ node, context }: { node: SingleASTN
       return node.content;
 
     case 'link':
+    case 'url':
+    case 'autolink':
       if (!isSafeLinkTarget(node.target)) {
         return <MessageASTNodes nodes={node.content} context={context} />;
       }
       return (
         <a href={node.target} target="_blank" rel="noopener noreferrer">
-          <MessageASTNodes nodes={node.content} context={context} />
-        </a>
-      );
-
-    case 'url':
-    case 'autolink':
-      return (
-        <a href={node.target} target="_blank" rel="noreferrer">
           <MessageASTNodes nodes={node.content} context={context} />
         </a>
       );
