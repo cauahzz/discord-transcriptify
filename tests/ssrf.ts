@@ -204,6 +204,32 @@ async function main() {
     );
     check('convertToWebP turns a jpeg into webp', webp.startsWith('data:image/webp;base64,'), true);
 
+    const frame = (r: number, b: number) =>
+      sharp({ create: { width: 8, height: 8, channels: 4, background: { r, g: 0, b, alpha: 1 } } })
+        .png()
+        .toBuffer();
+    const animatedWebp = await sharp([await frame(255, 0), await frame(0, 255)], { join: { animated: true } })
+      .webp()
+      .toBuffer();
+    const webpServer = http.createServer((_req, res) => {
+      res.writeHead(200, { 'content-type': 'image/webp' });
+      res.end(animatedWebp);
+    });
+    await new Promise<void>((r) => webpServer.listen(0, '127.0.0.1', r));
+    const webpUrl = `http://127.0.0.1:${(webpServer.address() as { port: number }).port}/anim.webp`;
+    const framesOf = async (downloader: TranscriptImageDownloader) => {
+      const embedded = String(await downloader.withAllowPrivateNetwork().build()(fake(webpUrl), {} as never));
+      const meta = await sharp(Buffer.from(embedded.split(',')[1], 'base64'), { animated: true }).metadata();
+      return `${meta.pages}/${meta.width}`;
+    };
+    check(
+      'an animated webp keeps its frames when compressed',
+      await framesOf(new TranscriptImageDownloader().withCompression(70)),
+      '2/8'
+    );
+    check('and when resized', await framesOf(new TranscriptImageDownloader().withMaxDimensions(4, 4)), '2/4');
+    webpServer.close();
+
     // last in this block: the cache setting is global to the process
     check('the sharp cache is on by default', sharp.cache().items.max > 0, true);
     await new TranscriptImageDownloader().withCompression(75).withSharpCache(false).withAllowPrivateNetwork().build()(
