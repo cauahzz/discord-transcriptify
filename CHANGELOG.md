@@ -10,6 +10,13 @@ All notable changes to this project are listed here. The format follows
 
 - The package ships only the compiled `dist` output, without the TypeScript sources and source maps.
 
+### Fixed
+
+- The thumbnail of a Components V2 section opens in the image preview, like the other images of a
+  message.
+- An animated WebP keeps all its frames when `saveImages` compresses or resizes it, instead of only
+  the first one.
+
 ## [1.1.2] - 2026-11-19
 
 ### Changed
