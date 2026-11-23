@@ -2755,6 +2755,96 @@ async function main() {
   (guild.members as any).fetch = originalFetch;
   /* eslint-enable @typescript-eslint/no-explicit-any */
 
+  console.log('\n== premium buttons, default select values, gallery videos and form components ==');
+  const richComponents = await generateFromMessages(
+    [
+      message({
+        flags: MessageFlags.IsComponentsV2,
+        components: [
+          {
+            type: 1,
+            components: [
+              { type: 2, style: 6, sku_id: '999000111' },
+              { type: 2, style: 5, label: 'Bad', url: 'javascript:alert(1)' },
+            ],
+          },
+          {
+            type: 1,
+            components: [
+              {
+                type: 5,
+                custom_id: 'users',
+                placeholder: 'Pick user',
+                default_values: [{ id: '42', type: 'user' }],
+              },
+            ],
+          },
+          {
+            type: 12,
+            items: [
+              { media: { url: 'https://example.com/clip.mp4', content_type: 'video/mp4' }, description: 'Demo clip' },
+              { media: { url: 'https://example.com/pic.png', content_type: 'image/png' }, description: 'Photo' },
+            ],
+          },
+          {
+            type: 18,
+            label: 'Preferences',
+            description: 'Choose one or more',
+            component: {
+              type: 22,
+              custom_id: 'prefs',
+              options: [
+                { label: 'Alpha', value: 'a', default: true },
+                { label: 'Beta', value: 'b' },
+              ],
+            },
+          },
+          {
+            type: 23,
+            custom_id: 'agree',
+            default: true,
+          },
+        ] as unknown as never[],
+      }),
+    ],
+    channel,
+    {
+      returnType: ExportReturnType.String,
+      callbacks: {
+        resolveChannel: () => null,
+        resolveRole: () => null,
+        resolveUser: (id) =>
+          id === '42' ? ({ id: '42', username: 'charlie', displayName: 'Charlie' } as never) : null,
+        resolveImageSrc: (att) => {
+          if (att.url.endsWith('.mp4')) throw new Error('video should not be sent to resolveImageSrc');
+          return INLINED;
+        },
+      },
+    }
+  );
+  check(
+    'premium button renders with premium class and fallback label',
+    richComponents.includes('discord-button-premium') && richComponents.includes('>Shop<'),
+    true
+  );
+  check('button with unsafe url does not emit a javascript href', richComponents.includes('href="javascript:'), false);
+  check(
+    'auto-populated select menu resolves default values into an openable list',
+    richComponents.includes('<details class="discord-select-menu">') && richComponents.includes('@Charlie'),
+    true
+  );
+  check(
+    'media gallery renders video items as video elements',
+    richComponents.includes('<video src="https://example.com/clip.mp4" controls="" preload="metadata"'),
+    true
+  );
+  check('media gallery still resolves images', richComponents.includes(`src="${INLINED}"`), true);
+  check(
+    'label and checkbox group render options',
+    richComponents.includes('Preferences') && richComponents.includes('Alpha') && richComponents.includes('Beta'),
+    true
+  );
+
   await client.destroy();
 
   console.log(`\n${failures === 0 ? 'ALL PASSED' : failures + ' FAILURE(S)'}`);

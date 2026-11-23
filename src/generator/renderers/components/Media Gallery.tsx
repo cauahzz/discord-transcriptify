@@ -27,10 +27,21 @@ function getMediaUrl(item: { media?: { url?: string }; data?: { media?: { url?: 
   return '';
 }
 
+function isVideoMedia(url: string, contentType?: string | null): boolean {
+  if (contentType?.toLowerCase().startsWith('video/')) return true;
+  try {
+    const pathname = new URL(url).pathname.toLowerCase();
+    return pathname.endsWith('.mp4') || pathname.endsWith('.webm') || pathname.endsWith('.mov');
+  } catch {
+    return false;
+  }
+}
+
 interface MediaGalleryItemResolved {
   url: string | null;
   description: string | null;
   spoiler: boolean;
+  isVideo: boolean;
   width: number;
   height: number;
 }
@@ -58,9 +69,10 @@ async function DiscordMediaGallery({ component, attachments, resolveImageSrc, me
       const rawMedia = media.media?.data;
       const width = rawMedia?.width ?? 0;
       const height = rawMedia?.height ?? 0;
+      const isVideo = isVideoMedia(resolvedUrl, rawMedia?.content_type);
 
       const url =
-        resolveImageSrc && message
+        !isVideo && resolveImageSrc && message
           ? await resolveImageUrl(resolvedUrl, resolveImageSrc, message, {
               width,
               height,
@@ -72,6 +84,7 @@ async function DiscordMediaGallery({ component, attachments, resolveImageSrc, me
         url,
         description: media.description,
         spoiler: media.spoiler,
+        isVideo,
         width,
         height,
       };
@@ -91,7 +104,20 @@ async function DiscordMediaGallery({ component, attachments, resolveImageSrc, me
       }}
     >
       {resolvedItems.map((item, idx) => {
-        const imageElement = (
+        const mediaElement = item.isVideo ? (
+          <video
+            src={item.url!}
+            controls
+            preload="metadata"
+            aria-label={item.description || 'Video content'}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+            }}
+          />
+        ) : (
           <img
             src={item.url!}
             alt={item.description || 'Media content'}
@@ -107,7 +133,7 @@ async function DiscordMediaGallery({ component, attachments, resolveImageSrc, me
 
         return (
           <div key={idx} style={{ ...getImageStyle(idx, count), position: 'relative' }}>
-            {item.spoiler ? <DiscordSpoiler>{imageElement}</DiscordSpoiler> : imageElement}
+            {item.spoiler ? <DiscordSpoiler>{mediaElement}</DiscordSpoiler> : mediaElement}
             {hasMore && idx === resolvedItems.length - 1 && (
               <div
                 style={{

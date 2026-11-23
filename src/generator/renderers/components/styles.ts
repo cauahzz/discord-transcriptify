@@ -19,6 +19,7 @@ export const ButtonStyleMapping = {
   [ButtonStyle.Success]: 'success',
   [ButtonStyle.Danger]: 'destructive',
   [ButtonStyle.Link]: 'link',
+  [ButtonStyle.Premium]: 'premium',
 } as const;
 
 export const globalStyles = `
@@ -304,6 +305,20 @@ export const globalStyles = `
   }
   .discord-button-destructive:hover {
     background-color: #a9232e;
+  }
+
+  .discord-button-premium {
+    background-color: var(--dt-brand);
+  }
+  .discord-button-premium:hover {
+    background-color: #4452bb;
+  }
+
+  .discord-button-premium-icon {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 6px;
+    flex-shrink: 0;
   }
 
   .discord-button-disabled,
