@@ -35,7 +35,7 @@ type RenderContentContext = RenderMessageContext & {
   };
 };
 
-// the parser keeps a link's target as written, so a javascript: link would run in the page
+// the parser keeps any scheme, and React only defuses javascript:, which still leaves a dead link
 const SAFE_LINK_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'discord:']);
 
 function isSafeLinkTarget(target: unknown): target is string {

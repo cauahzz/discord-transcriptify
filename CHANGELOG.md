@@ -21,11 +21,8 @@ All notable changes to this project are listed here. The format follows
 - Masked links (`[text](url)`) work in every message, not only in embeds and webhooks.
 - A message the markdown parser fails on, such as one with `</:id>` and no command name, is shown as
   plain text instead of stopping the whole transcript.
-
-### Security
-
-- A link whose target is not `http`, `https`, `mailto` or `discord` is shown as text, so a
-  `javascript:` link in a message or an embed no longer runs when clicked.
+- A link whose target is not `http`, `https`, `mailto` or `discord` is shown as text instead of a
+  link that leads nowhere.
 
 ## [1.1.2] - 2026-11-19
 
