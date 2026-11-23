@@ -237,7 +237,8 @@ export class TranscriptImageDownloader {
       try {
         // sharp can be the module itself or { default: sharp }
         const sharpFn = sharp.default || sharp;
-        let pipeline = sharpFn(buffer);
+        // without `animated` sharp decodes only the first frame of an animated WebP
+        let pipeline = sharpFn(buffer, { animated: true });
 
         if (this.maxDimensions) {
           const { width, height } = this.maxDimensions;
