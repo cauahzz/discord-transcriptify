@@ -2255,6 +2255,21 @@ async function main() {
     false
   );
 
+  const thumbnailDom = dom(
+    '<body><img class="discord-thumbnail" src="t.png"><discord-spoiler class="discord-spoiler"><img class="discord-thumbnail" src="s.png"></discord-spoiler></body>'
+  );
+  thumbnailDom.run(source(uiImagePreviewFeature));
+  const [thumbnail, spoiledThumbnail] = thumbnailDom.all('.discord-thumbnail');
+  const thumbnailOverlay = thumbnailDom.one('.discord-image-preview-overlay');
+  thumbnailDom.fire(spoiledThumbnail, 'click', clickInit);
+  check(
+    'a section thumbnail in an unrevealed spoiler is refused',
+    thumbnailOverlay.classList.contains('is-open'),
+    false
+  );
+  thumbnailDom.fire(thumbnail, 'click', clickInit);
+  check('a section thumbnail opens', thumbnailOverlay.classList.contains('is-open'), true);
+
   // the voice player
   const voiceMarkup = (n: number) =>
     `<div class="discord-voice-message" id="v${n}"><button type="button" class="discord-voice-play-button"></button><audio controls="" src="a${n}.ogg"></audio></div>`;

@@ -13,6 +13,7 @@ export const enableImagePreview = `
     'discord-attachment img',
     '.discord-attachment-gallery img',
     '.discord-media-gallery img',
+    '.discord-thumbnail',
     'discord-embed img',
   ].join(',');
 
