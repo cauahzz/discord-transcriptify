@@ -316,6 +316,63 @@ async function main() {
     true
   );
 
+  const commands = await render([
+    message({
+      content:
+        '</ping:123456789012345678> </admin users ban:123456789012345678> <123456789012345678:customize> <123456789012345678:browse> <123456789012345678:guide> <123456789012345678:linked-roles>',
+    }),
+  ]);
+  check('a slash command mention', commands.includes('<discord-mention type="slash">ping</discord-mention>'), true);
+  check(
+    'keeps its subcommands',
+    commands.includes('<discord-mention type="slash">admin users ban</discord-mention>'),
+    true
+  );
+  check(
+    'server navigation shows the names Discord gives it',
+    ['Channels &amp; Roles', 'Browse Channels', 'Server Guide', 'Linked Roles'].every((label) =>
+      commands.includes(`${label}</discord-mention>`)
+    ),
+    true
+  );
+  const linkedRole = await generateFromMessages(
+    [message({ content: '<123456789012345678:linked-roles:123456789012345679>' })],
+    channel,
+    {
+      returnType: ExportReturnType.String,
+      callbacks: {
+        resolveChannel: () => null,
+        resolveUser: () => null,
+        resolveRole: (id) =>
+          id === '123456789012345679' ? ({ name: 'Verified', hexColor: '#2ecc71' } as never) : null,
+      },
+    }
+  );
+  check(
+    'linked roles with a role shows that role',
+    linkedRole.includes('<discord-mention type="role" color="#2ecc71">Verified</discord-mention>'),
+    true
+  );
+
+  const links = await render([
+    message({
+      content:
+        '[docs](https://example.com/docs) <https://example.com/raw> [masked](javascript:alert(1)) <javascript://%0Aalert(2)>',
+    }),
+  ]);
+  check(
+    'a masked link opens in a new tab',
+    links.includes('<a href="https://example.com/docs" target="_blank" rel="noopener noreferrer">docs'),
+    true
+  );
+  check(
+    'and so does a link in angle brackets',
+    links.includes('<a href="https://example.com/raw" target="_blank" rel="noopener noreferrer">'),
+    true
+  );
+  check('a javascript: link of either kind is left as text', /href="javascript/i.test(links), false);
+  check('keeping what it said', links.includes('masked') && links.includes('javascript://%0Aalert(2)'), true);
+
   console.log('\n== buttons and select menus ==');
   const buttonRows = await render([
     message({

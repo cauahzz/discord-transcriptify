@@ -16,6 +16,14 @@ All notable changes to this project are listed here. The format follows
   message.
 - An animated WebP keeps all its frames when `saveImages` compresses or resizes it, instead of only
   the first one.
+- Slash command mentions (`</name:id>`) and server navigation links (`<id:customize>`, `browse`,
+  `guide`, `linked-roles`) appear in the message instead of being left out.
+- Masked links (`[text](url)`) work in every message, not only in embeds and webhooks.
+
+### Security
+
+- A link whose target is not `http`, `https`, `mailto` or `discord` is shown as text, so a
+  `javascript:` link in a message or an embed no longer runs when clicked.
 
 ## [1.1.2] - 2026-11-19
 
