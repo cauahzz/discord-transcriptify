@@ -237,7 +237,7 @@ export class TranscriptImageDownloader {
       try {
         // sharp can be the module itself or { default: sharp }
         const sharpFn = sharp.default || sharp;
-        // preserve frames on animated WebP/APNG inputs when supported
+        // without `animated` sharp decodes only the first frame of an animated WebP
         let pipeline = sharpFn(buffer, { animated: true });
 
         if (this.maxDimensions) {

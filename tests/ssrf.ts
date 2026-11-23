@@ -204,6 +204,32 @@ async function main() {
     );
     check('convertToWebP turns a jpeg into webp', webp.startsWith('data:image/webp;base64,'), true);
 
+    const frame = (r: number, b: number) =>
+      sharp({ create: { width: 8, height: 8, channels: 4, background: { r, g: 0, b, alpha: 1 } } })
+        .png()
+        .toBuffer();
+    const animatedWebp = await sharp([await frame(255, 0), await frame(0, 255)], { join: { animated: true } })
+      .webp()
+      .toBuffer();
+    const webpServer = http.createServer((_req, res) => {
+      res.writeHead(200, { 'content-type': 'image/webp' });
+      res.end(animatedWebp);
+    });
+    await new Promise<void>((r) => webpServer.listen(0, '127.0.0.1', r));
+    const webpUrl = `http://127.0.0.1:${(webpServer.address() as { port: number }).port}/anim.webp`;
+    const framesOf = async (downloader: TranscriptImageDownloader) => {
+      const embedded = String(await downloader.withAllowPrivateNetwork().build()(fake(webpUrl), {} as never));
+      const meta = await sharp(Buffer.from(embedded.split(',')[1], 'base64'), { animated: true }).metadata();
+      return `${meta.pages}/${meta.width}`;
+    };
+    check(
+      'an animated webp keeps its frames when compressed',
+      await framesOf(new TranscriptImageDownloader().withCompression(70)),
+      '2/8'
+    );
+    check('and when resized', await framesOf(new TranscriptImageDownloader().withMaxDimensions(4, 4)), '2/4');
+    webpServer.close();
+
     // last in this block: the cache setting is global to the process
     check('the sharp cache is on by default', sharp.cache().items.max > 0, true);
     await new TranscriptImageDownloader().withCompression(75).withSharpCache(false).withAllowPrivateNetwork().build()(
@@ -308,40 +334,6 @@ async function main() {
   const cappedVoice = buildVoiceFetcher({ maxSizeKb: 64, maxTotalSizeKb: 0.05, allowPrivateNetwork: true });
   check('the first voice message fits the total', typeof (await cappedVoice(voice('a.ogg'), {} as never)), 'string');
   check('the next one does not', await cappedVoice(voice('a.ogg'), {} as never), undefined);
-
-  console.log('\n== animated webp preservation ==');
-  const sharpMod = await import('sharp');
-  const sharpFn = sharpMod.default || sharpMod;
-  const frame1 = await sharpFn({
-    create: { width: 8, height: 8, channels: 4, background: { r: 255, g: 0, b: 0, alpha: 1 } },
-  })
-    .png()
-    .toBuffer();
-  const frame2 = await sharpFn({
-    create: { width: 8, height: 8, channels: 4, background: { r: 0, g: 0, b: 255, alpha: 1 } },
-  })
-    .png()
-    .toBuffer();
-  const animatedWebp = await sharpFn([frame1, frame2], { join: { animated: true } })
-    .webp()
-    .toBuffer();
-  const webpServer = http.createServer((_req, res) => {
-    res.writeHead(200, { 'content-type': 'image/webp' });
-    res.end(animatedWebp);
-  });
-  await new Promise<void>((r) => webpServer.listen(0, '127.0.0.1', r));
-  const webpPort = (webpServer.address() as { port: number }).port;
-  const processedWebp = String(
-    await new TranscriptImageDownloader().withCompression(70, false).withAllowPrivateNetwork().build()(
-      fake(`http://127.0.0.1:${webpPort}/anim.webp`),
-      {} as never
-    )
-  );
-  const processedMeta = await sharpFn(Buffer.from(processedWebp.split('base64,')[1], 'base64'), {
-    animated: true,
-  }).metadata();
-  check('animated webp stays animated after compression', (processedMeta.pages ?? 1) > 1, true);
-  webpServer.close();
 
   // --- generateFromMessages keeps every embedded file as bytes and splices it in at the end ---
   console.log('\n== downloads kept for the page ==');
