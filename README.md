@@ -29,8 +29,8 @@ and v15.
 
 - **Looks like Discord.** Markdown, mentions in role colours, replies, reactions, embeds, polls, voice
   messages, forwarded messages, threads, stickers and system messages.
-- **Full Components V2.** Containers, sections, media galleries, separators, files, checkboxes and radio
-  groups, next to the classic buttons and select menus.
+- **Full Components V2.** Containers, sections, text displays, media galleries, separators and files,
+  next to the classic buttons and select menus.
 - **One file, nothing to host.** Search, member list, pinned messages, image preview and a thread
   panel are built in. Images and voice messages can be embedded so the file keeps working after
   Discord's links expire.
@@ -92,7 +92,7 @@ push.
   headers, and consecutive messages from the same author grouped under one header.
 - **Embeds**: every field, including author, footer, thumbnail and image.
 - **Components V2**: container (accent colour, spoiler), text display, section with a thumbnail or
-  button accessory, media gallery, file, separator, checkbox and radio group.
+  button accessory, media gallery, file and separator.
 - **Buttons and select menus**: all styles, link buttons, emoji and the disabled state. A select
   menu opens on a click and lists its options, with their emoji and descriptions.
 - **Attachments**: images, videos and audio inline; several images as one grid; any other file as a
